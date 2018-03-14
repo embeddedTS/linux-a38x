@@ -1,0 +1,303 @@
+/*
+ * Device Tree file for Technologic Systems TS-7840
+ *
+ *  Copyright (C) 2017 Technologic Systems
+ *
+ * Mark Featherston <mark@embeddedarm.com>
+ *
+ * This file is dual-licensed: you can use it either under the terms
+ * of the GPL or the X11 license, at your option. Note that this dual
+ * licensing only applies to this file, and not this project as a
+ * whole.
+ *
+ *  a) This file is licensed under the terms of the GNU General Public
+ *     License version 2.  This program is licensed "as is" without
+ *     any warranty of any kind, whether express or implied.
+ *
+ * Or, alternatively,
+ *
+ *  b) Permission is hereby granted, free of charge, to any person
+ *     obtaining a copy of this software and associated documentation
+ *     files (the "Software"), to deal in the Software without
+ *     restriction, including without limitation the rights to use,
+ *     copy, modify, merge, publish, distribute, sublicense, and/or
+ *     sell copies of the Software, and to permit persons to whom the
+ *     Software is furnished to do so, subject to the following
+ *     conditions:
+ *
+ *     The above copyright notice and this permission notice shall be
+ *     included in all copies or substantial portions of the Software.
+ *
+ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ *     OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/dts-v1/;
+#include "armada-385.dtsi"
+
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "Technologic Systems TS-7840";
+	compatible = "technologic,a385-ts7840", "marvell,armada385", "marvell,armada380";
+
+	aliases {
+		/* So that mvebu u-boot can update the MAC addresses */
+		ethernet1 = &eth0;
+		ethernet2 = &eth1;
+		ethernet3 = &eth2;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x00000000 0x40000000>; /* 1024 MB */
+	};
+
+	soc {
+		ranges = <MBUS_ID(0xf0, 0x01) 0 0xf1000000 0x100000
+			  MBUS_ID(0x01, 0x1d) 0 0xfff00000 0x100000
+			  MBUS_ID(0x09, 0x19) 0 0xf1100000 0x10000
+			  MBUS_ID(0x09, 0x15) 0 0xf1110000 0x10000
+			  MBUS_ID(0x0c, 0x04) 0 0xf1200000 0x100000>;
+
+		internal-regs {
+			/* We use M41T100 instead, not SOC RTC */
+			rtc@a3800 {
+				status = "disabled";
+			};
+
+			sata@a8000 {
+				status = "okay";
+			};
+
+			sdhci@d8000 {
+				bus-width = <4>;
+				no-1-8-v;
+				pinctrl-0 = <&sdhci_pins0>;
+				pinctrl-names = "default";
+				status = "okay";
+			};
+
+			usb@58000 {
+				status = "okay";
+			};
+
+			usb3@f0000 {
+				status = "okay";
+				usb-phy = <&usb3_phy>;
+			};
+		};
+
+		pcie {
+			status = "okay";
+
+			/* full size PCIe connector */
+			pcie@1,0 {
+				/* Port 0, Lane 0 */
+				status = "okay";
+			};
+
+			/* M.2 WIFI */
+			pcie@2,0 {
+				/* Port 1, Lane 0 */
+				status = "okay";
+			};
+
+			/* FPGA */
+			pcie@3,0 {
+				/* Port 2, Lane 0 */
+				status = "okay";
+			};
+		};
+	};
+
+	usb3_phy: usb3_phy {
+		compatible = "usb-nop-xceiv";
+		/* Set up a vcc_supply for U16 on the FPGA */
+		/*vcc-supply = <&reg_xhci0_vbus>; */
+	};
+
+	tsfpga {
+		compatible = "technologic,ts78xx-mfd";
+		reg = <0 0xe6>;
+		reg-io-width = <4>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		fpgaio: ts7800v2-gpio {
+			compatible = "technologic,ts7800v2-gpio";
+			gpio-controller;
+			#gpio-cells = <2>;
+			reg = <0x0>;
+			base = <64>;
+			ngpios = <118>;
+			status = "okay";
+		};
+	};
+};
+
+&bm {
+	status = "okay";
+};
+
+&bm_bppi {
+	status = "okay";
+};
+
+/* magjack/sfp port 0 */
+&eth0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ge0_rgmii_pins>;
+	status = "okay";
+	phy = <&phy0>;
+	phy-mode = "rgmii-id";
+	buffer-manager = <&bm>;
+	bm,pool-long = <0>;
+	bm,pool-short = <3>;
+};
+
+/* magjack/sfgp port 1 */
+&eth1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ge1_rgmii_pins>;
+	status = "okay";
+	phy = <&phy1>;
+	phy-mode = "rgmii-id";
+	buffer-manager = <&bm>;
+	bm,pool-long = <1>;
+	bm,pool-short = <3>;
+};
+
+/* sgmii port to eth switch */
+&eth2 {
+	status = "okay";
+	phy-mode = "sgmii";
+	buffer-manager = <&bm>;
+	bm,pool-long = <2>;
+	bm,pool-short = <3>;
+
+	fixed-link {
+		speed = <1000>;
+		full-duplex;
+	};
+};
+
+&i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c0_pins>;
+	clock-frequency = <100000>;
+	status = "okay";
+
+	silabs_wdt: silabs-wdt@54 {
+		compatible = "technologicsystems,ts7800v2-wdt";
+		reg = <0x54>;
+		status = "okay";
+	};
+};
+
+&mdio {
+	pinctrl-names = "default";
+	pinctrl-0 = <&mdio_pins>;
+
+	phy0: ethernet-phy@0 {
+		reg = <0>;
+	};
+
+	phy1: ethernet-phy@1 {
+		reg = <1>;
+	};
+
+	switch@2 {
+		compatible = "marvell,mv88e6085";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		dsa,member = <0 0>;
+		reg = <2>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			ports@0 {
+				reg = <0>;
+				label = "lan0";
+			};
+
+			ports@1 {
+				reg = <1>;
+				label = "lan1";
+			};
+
+			ports@2 {
+				reg = <2>;
+				label = "lan2";
+			};
+
+			ports@3 {
+				reg = <3>;
+				label = "lan3";
+			};
+
+			ports@4 {
+				reg = <4>;
+				label = "lan4";
+			};
+
+			port@5 {
+				reg = <5>;
+				label = "cpu";
+				ethernet = <&eth2>;
+				fixed-link {
+					speed = <1000>;
+					full-duplex;
+				};
+			};
+		};
+	};
+};
+
+&pinctrl {
+	sdhci_pins0: sdhci-pins0 {
+		marvell,pins = "mpp50", "mpp54", "mpp55",
+			       "mpp57", "mpp58", "mpp59";
+		marvell,function = "sd0";
+	};
+};
+
+&spi0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi0_pins>;
+	status = "okay";
+	u-boot,dm-pre-reloc;
+
+	flash: n25q064@0 {
+		compatible = "st,n25q064";
+		spi-max-frequency = <20000000>;
+		reg = <0>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		u-boot,dm-pre-reloc;
+	};
+};
+
+&uart0 {
+	pinctrl-0 = <&uart0_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+	u-boot,dm-pre-reloc;
+};
+
+/* We use external watchdog */
+&watchdog {
+	status = "disabled";	
+};
