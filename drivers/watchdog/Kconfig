@@ -1727,6 +1727,14 @@ config MEN_A21_WDT
 
 	  If unsure select N here.
 
+config TS7800V2_WATCHDOG
+	tristate "TS7800-V2 WDT"
+	select WATCHDOG_CORE
+	depends on MACH_ARMADA_38X && I2C
+	help
+	  Watchdog timer for the TS78XX.  This operates by writing to the
+	  hardware WDT in the onboard SiLabs microcontroller, via i2c.
+
 # PPC64 Architecture
 
 config WATCHDOG_RTAS
