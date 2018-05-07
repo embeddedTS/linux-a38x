@@ -11,10 +11,23 @@
 #include <linux/regmap.h>
 #include <linux/slab.h>
 
-static struct mfd_cell tsfpga_sysreg_cells[] = {
+#define TS7820_GPIO_BANK0	0x0
+#define TS7820_GPIO_SZ		0x10
+
+static struct resource tsgpio_resources[] = {
 	{
-		.name = "ts7800v2-gpio",
-		.of_compatible = "technologic,ts7800v2-gpio",
+		.start = TS7820_GPIO_BANK0,
+		.end = TS7820_GPIO_SZ,
+		.flags = IORESOURCE_MEM,
+	},
+};
+
+static const struct mfd_cell tsfpga_sysreg_cells[] = {
+	{
+		.name = "ts7820-gpio",
+		.resources = &tsgpio_resources[0],
+		.num_resources = 1,
+		.of_compatible = "technologic,ts7820-gpio",
 	},
 };
 
@@ -27,10 +40,10 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 	u32 reg;
 	unsigned long start, end;
 
-	dev_info(&pdev->dev, "Driver loaded\n");
 	priv = devm_kzalloc(&pdev->dev, sizeof(struct tsfpga_res), GFP_KERNEL);
-	if (!priv){
-		return -ENOMEM;
+	if (!priv) {
+		err = -ENOMEM;
+		goto out;
 	}
 
 	if (pci_enable_device(pdev)) {
@@ -38,23 +51,20 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 		goto out;
 	}
 
-	/* On the TS-78XX, the FPGA is always connected to BUS 3.  If it is not BUS 3, it might
-	 * be the TS-MINI PCIe device instead.  Only attach if it is bus 3. */
-	if(pdev->bus->number != 3)
-	{
+	/* On the TS-78XX, the FPGA is always connected to BUS 3.
+	 * If it is not BUS 3, it might be the TS-MINI PCIe
+	 * device instead.  Only attach if it is bus 3.
+	 */
+	if (pdev->bus->number != 3) {
 		err = -ENODEV;
 		goto out_pci_disable_device;
 	}
-
-	err = pci_request_regions(pdev, "tsfpga");
-	if (err)
-		goto out_pci_disable_device;
 
 	pci_set_drvdata(pdev, priv);
 	priv->dev = &pdev->dev;
 
 	np = of_find_compatible_node(NULL, NULL, "technologic,ts78xx-mfd");
-	if(np == NULL) {
+	if (np == NULL) {
 		dev_err(&pdev->dev, "Couldn't find the device tree node!\n");
 		reg = -ENODEV;
 		goto out_pci_disable_device;
@@ -62,52 +72,50 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 
 	pdev->dev.of_node = of_node_get(np);
 
-	/* We only use BAR2 */
-	start = pci_resource_start(pdev, 2);
-	end = pci_resource_start(pdev, 2);
+	/* We only use BAR0 */
+	start = pci_resource_start(pdev, 0);
+	end = pci_resource_end(pdev, 0);
 	if (!start || !end) {
 		err = -ENODEV;
 		goto out_pci_disable_device;
 	}
 
-	priv->base = devm_ioremap_nocache(&pdev->dev, start, 1024*1024);
+	/* Map to just read rev */
+	priv->base = ioremap_nocache(start, TS7820_GPIO_SZ);
 	if (IS_ERR(priv->base)) {
 		err = PTR_ERR(priv->base);
 		dev_err(&pdev->dev, "ioremap failed for fpga mem\n");
 		goto out_pci_disable_device;
 	}
+	reg = readl(priv->base + 0x4);
+	iounmap(priv->base);
 
-	priv->regmap = devm_regmap_init_mmio(&pdev->dev,priv->base,	&tsfpga_regmap_config);
-	if (IS_ERR(priv->regmap)) {
-		dev_err(&pdev->dev, "failed to initialise regmap\n");
-		err = PTR_ERR(priv->regmap);
-		goto out_pci_disable_device;
-	}
+	dev_info(&pdev->dev, "Detected model 0x%X, FPGA REV %d\n",
+		reg >> 16, reg & 0xffff);
 
-	reg = readl(priv->base);
+	devm_mfd_add_devices(&pdev->dev, -1,
+			     tsfpga_sysreg_cells,
+			     ARRAY_SIZE(tsfpga_sysreg_cells),
+			     &pdev->resource[0],
+			     0, NULL);
 
-	dev_info(&pdev->dev, "Detected model 0x%X, FPGA REV %d\n", 
-		reg >> 8, reg & 0xff);
+	return 0;
 
-	return devm_mfd_add_devices(&pdev->dev, PLATFORM_DEVID_NONE, tsfpga_sysreg_cells,
-			ARRAY_SIZE(tsfpga_sysreg_cells), NULL, 0, NULL);
-
-      out_pci_disable_device:
+out_pci_disable_device:
 	pci_free_irq_vectors(pdev);
-      	pci_disable_device(pdev);
+	pci_disable_device(pdev);
 	pci_release_regions(pdev);
 
-      out:
+out:
 	return err;
 }
 
 static void tsfpga_pci_remove(struct pci_dev *pdev)
 {
-	
 }
 
 static const struct pci_device_id tsfpga_pci_id_table[] = {
-	{PCI_DEVICE(0x1172, 0x0004), 0},	/* TS-7840 */
+	{PCI_DEVICE(0x1172, 0x0004), 0},	/* TS-7820/TS-7840 */
 	{0,}
 };
 MODULE_DEVICE_TABLE(pci, tsfpga_pci_id_table);
@@ -125,7 +133,7 @@ static int __init tsfpga_init(void)
 
 	ret = pci_register_driver(&tsfpga_pci_driver);
 	if (ret) {
-		printk(KERN_ERR "Unable to initialize PCI module\n");
+		pr_err("Could not register pci driver\n");
 		return ret;
 	}
 	return ret;
