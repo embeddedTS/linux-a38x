@@ -11,6 +11,8 @@
 #include <linux/regmap.h>
 #include <linux/slab.h>
 
+#define TS7820_GPIO_SZ		0x10
+
 static int tsfpga_pci_probe(struct pci_dev *pdev,
 			   const struct pci_device_id *ent)
 {
