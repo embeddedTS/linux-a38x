@@ -80,18 +80,19 @@
 
 	tsfpga {
 		compatible = "technologic,ts78xx-mfd";
-		reg = <0 0xe6>;
-		reg-io-width = <4>;
 		#address-cells = <1>;
-		#size-cells = <0>;
+		#size-cells = <1>;
 
-		fpgaio: ts7800v2-gpio {
-			compatible = "technologic,ts7800v2-gpio";
+		// Ideally this should be under the pcie bus 3 node
+		// and sub devices could specify regs within these ranges
+		// but it doesn't seem this works.
+	        ranges = <0 0xe4080000 0x1000>; // BAR0
+
+		fpga_bank0: ts7820-gpio@0 {
+			compatible = "technologic,ts7820-gpio";
 			gpio-controller;
 			#gpio-cells = <2>;
-			reg = <0x0>;
-			base = <64>;
-			ngpios = <118>;
+			reg = <0x0 0x10>;
 			status = "okay";
 		};
 	};
@@ -210,6 +211,10 @@
 			};
 		};
 	};
+};
+
+&pciec {
+	status = "okay";
 };
 
 &pcie2 {

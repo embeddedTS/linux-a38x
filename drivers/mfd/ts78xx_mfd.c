@@ -11,26 +11,6 @@
 #include <linux/regmap.h>
 #include <linux/slab.h>
 
-#define TS7820_GPIO_BANK0	0x0
-#define TS7820_GPIO_SZ		0x10
-
-static struct resource tsgpio_resources[] = {
-	{
-		.start = TS7820_GPIO_BANK0,
-		.end = TS7820_GPIO_SZ,
-		.flags = IORESOURCE_MEM,
-	},
-};
-
-static const struct mfd_cell tsfpga_sysreg_cells[] = {
-	{
-		.name = "ts7820-gpio",
-		.resources = &tsgpio_resources[0],
-		.num_resources = 1,
-		.of_compatible = "technologic,ts7820-gpio",
-	},
-};
-
 static int tsfpga_pci_probe(struct pci_dev *pdev,
 			   const struct pci_device_id *ent)
 {
@@ -51,15 +31,6 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 		goto out;
 	}
 
-	/* On the TS-78XX, the FPGA is always connected to BUS 3.
-	 * If it is not BUS 3, it might be the TS-MINI PCIe
-	 * device instead.  Only attach if it is bus 3.
-	 */
-	if (pdev->bus->number != 3) {
-		err = -ENODEV;
-		goto out_pci_disable_device;
-	}
-
 	pci_set_drvdata(pdev, priv);
 	priv->dev = &pdev->dev;
 
@@ -69,8 +40,7 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 		reg = -ENODEV;
 		goto out_pci_disable_device;
 	}
-
-	pdev->dev.of_node = of_node_get(np);
+	pdev->dev.of_node = np;
 
 	/* We only use BAR0 */
 	start = pci_resource_start(pdev, 0);
@@ -93,11 +63,7 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 	dev_info(&pdev->dev, "Detected model 0x%X, FPGA REV %d\n",
 		reg >> 16, reg & 0xffff);
 
-	devm_mfd_add_devices(&pdev->dev, -1,
-			     tsfpga_sysreg_cells,
-			     ARRAY_SIZE(tsfpga_sysreg_cells),
-			     &pdev->resource[0],
-			     0, NULL);
+	devm_of_platform_populate(&pdev->dev);
 
 	return 0;
 
