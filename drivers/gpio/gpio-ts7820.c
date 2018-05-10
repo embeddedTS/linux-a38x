@@ -72,7 +72,7 @@ static int ts7820_gpio_direction_input(struct gpio_chip *chip,
 }
 
 static int ts7820_gpio_direction_output(struct gpio_chip *chip,
-					 unsigned int pin, int val)
+					unsigned int pin, int val)
 {
 	struct ts7820_gpio_chip *gc = gpiochip_get_data(chip);
 
@@ -82,7 +82,7 @@ static int ts7820_gpio_direction_output(struct gpio_chip *chip,
 }
 
 static int ts7820_gpio_direction_get(struct gpio_chip *chip,
-					 unsigned int pin)
+				     unsigned int pin)
 {
 	struct ts7820_gpio_chip *gc = gpiochip_get_data(chip);
 
