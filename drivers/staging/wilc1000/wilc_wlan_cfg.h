@@ -1,4 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0 */
 /* ////////////////////////////////////////////////////////////////////////// */
 /*  */
 /* Copyright (c) Atmel Corporation.  All rights reserved. */
@@ -29,6 +28,11 @@ struct wilc_cfg_word {
 struct wilc_cfg_str {
 	u32 id;
 	u8 *str;
+};
+
+struct wilc_cfg_bin {
+	u32 id;
+	u8 *bin;
 };
 
 struct wilc;
