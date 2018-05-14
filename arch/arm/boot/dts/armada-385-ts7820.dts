@@ -58,6 +58,63 @@
 		stdout-path = "serial0:115200n8";
 	};
 
+	i2c2: m2-i2c {
+		compatible = "i2c-gpio";
+		status = "okay";
+		gpios = <&fpga_bank0 11 0>, /* sda */
+			<&fpga_bank0 10 0>; /* scl */
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	i2c3: sfp-i2c {
+		compatible = "i2c-gpio";
+		status = "okay";
+		gpios = <&fpga_bank0 21 0>, /* sda */
+			<&fpga_bank0 22 0>; /* scl */
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		sfp1: at24c04@50 {
+			compatible = "atmel,24c02";
+			reg = <0x50>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		red-led {
+			label = "red-led";
+			gpios = <&fpga_bank0 4 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		green-led {
+			label = "green-led";
+			gpios = <&fpga_bank0 5 GPIO_ACTIVE_LOW>;
+			default-state = "on";
+		};
+
+		blue-led {
+			label = "blue-led";
+			gpios = <&fpga_bank0 17 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		phy_0_led {
+			label = "phy-0-led";
+			gpios = <&fpga_bank0 6 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "f1072004.mdio-mii:00:1Gbps";
+		};
+
+		phy_1_led {
+			label = "phy-1-led";
+			gpios = <&fpga_bank0 7 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "f1072004.mdio-mii:01:1Gbps";
+		};
+	};
+
 	memory {
 		device_type = "memory";
 		reg = <0x00000000 0x40000000>; /* 1024 MB */
@@ -231,6 +288,12 @@
 			       "mpp57", "mpp58", "mpp59";
 		marvell,function = "sd0";
 	};
+
+	wifi_gpio_pins: wifi-gpio-pins {
+		marvell,pins = "mpp18"; /* WIFI_IRQ */
+		marvell,function = "gpio";
+		bias-pull-up;
+	};
 };
 
 &sdhci {
@@ -243,17 +306,36 @@
 
 &spi0 {
 	pinctrl-names = "default";
-	pinctrl-0 = <&spi0_pins>;
+	pinctrl-0 = <&spi0_pins>, <&wifi_gpio_pins>;
 	status = "okay";
 	u-boot,dm-pre-reloc;
+	num-cs = <3>;
+	cs-gpios = <0>, <&fpga_bank0 13 0>, <&fpga_bank0 26 0>;
 
-	flash: n25q064@0 {
-		compatible = "st,n25q064";
+	/* Development boot flash.  Not onboard. */
+	flash0: n25q064@0 {
+		compatible = "micron,n25q064", "jedec,spi-nor";
 		spi-max-frequency = <20000000>;
 		reg = <0>;
-		#address-cells = <1>;
-		#size-cells = <1>;
 		u-boot,dm-pre-reloc;
+	};
+
+	/* FPGA Flash */
+	flash1: is25lq016b@1 {
+		compatible = "sst,is25lq016b,", "jedec,spi-nor";
+		spi-max-frequency = <20000000>;
+		reg = <1>;
+		u-boot,dm-pre-reloc;
+	};
+
+	wilc_spi@0 {
+		compatible = "atmel,wilc_spi";
+		reg = <2>;
+		spi-max-frequency = <24000000>;
+		wilc3000,reset-gpios = <&fpga_bank0 20 GPIO_ACTIVE_LOW>;
+		wilc3000,chip-en-gpios = <&fpga_bank0 19 GPIO_ACTIVE_HIGH>;
+		wilc3000,irq-gpios = <&gpio0 18 0>;
+		status = "okay";
 	};
 };
 
