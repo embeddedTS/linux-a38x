@@ -224,10 +224,14 @@
 
 	phy0: ethernet-phy@0 {
 		reg = <0>;
+		/* Configure LED[0] to blink for activity */
+		marvell,reg-init = <3 16 0 0x1aa4>;
 	};
 
 	phy1: ethernet-phy@1 {
 		reg = <1>;
+		/* Configure LED[0] to blink for activity */
+		marvell,reg-init = <3 16 0 0x1aa4>;
 	};
 
 	switch@2 {
