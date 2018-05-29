@@ -3,13 +3,17 @@
 #include <linux/i2c.h>
 #include <linux/kernel.h>
 #include <linux/mfd/core.h>
-#include <linux/mfd/tsfpga.h>
 #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/pci.h>
-#include <linux/regmap.h>
 #include <linux/slab.h>
+
+struct tsfpga_res
+{
+	struct device *dev;
+	void __iomem *base;
+};
 
 #define TS7820_GPIO_SZ		0x10
 
