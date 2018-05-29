@@ -216,6 +216,11 @@
 		reg = <0x54>;
 		status = "okay";
 	};
+
+	rtc1: m41t00s@68 {
+		compatible = "m41t00";
+		reg = <0x68>;
+	};
 };
 
 &mdio {
