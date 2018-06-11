@@ -1,5 +1,5 @@
 /*
- * Device Tree file for Technologic Systems TS-7840
+ * Device Tree file for Technologic Systems TS-7820
  *
  *  Copyright (C) 2017 Technologic Systems
  *
@@ -135,15 +135,18 @@
 		};
 	};
 
-	tsfpga {
+	tsfpga_pcie: tsfpga-pcie {
 		compatible = "technologic,ts78xx-mfd";
 		#address-cells = <1>;
 		#size-cells = <1>;
 
+		interrupt-controller;
+		#interrupt-cells = <1>;
+
 		// Ideally this should be under the pcie bus 3 node
 		// and sub devices could specify regs within these ranges
 		// but it doesn't seem this works.
-	        ranges = <0 0xe4080000 0x1000>; // BAR0
+		ranges = <0 0xe4080000 0x1000>; // BAR0
 
 		fpga_bank0: ts7820-gpio@0 {
 			compatible = "technologic,ts7820-gpio";
@@ -151,6 +154,78 @@
 			#gpio-cells = <2>;
 			reg = <0x0 0x10>;
 			status = "okay";
+		};
+
+		fpga_uart0: fpga-uart0 {
+			compatible = "ns16550a";
+			reg = <0x80 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <0 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart1: fpga-uart1 {
+			compatible = "ns16550a";
+			reg = <0x88 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <1 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart2: fpga-uart2 {
+			compatible = "ns16550a";
+			reg = <0x90 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <2 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart3: fpga-uart3 {
+			compatible = "ns16550a";
+			reg = <0x98 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <3 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart4: fpga-uart4 {
+			compatible = "ns16550a";
+			reg = <0xa0 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <4 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart5: fpga-uart5 {
+			compatible = "ns16550a";
+			reg = <0xa8 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <5 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart6: fpga-uart6 {
+			compatible = "ns16550a";
+			reg = <0xb0 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <6 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart7: fpga-uart7 {
+			compatible = "ns16550a";
+			reg = <0xb8 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <7 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
 		};
 	};
 };
