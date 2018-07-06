@@ -59,6 +59,7 @@ static void ts7820_handle_chanied_irq(struct irq_desc *desc)
 
 		status &= ~(1 << bit);
 		generic_handle_irq(irq);
+		status = readl(priv->base + TS7820_IRQ_STATUS);
 	} while (status);
 
 out:
