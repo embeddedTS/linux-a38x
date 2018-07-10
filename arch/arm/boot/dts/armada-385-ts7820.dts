@@ -93,7 +93,7 @@
 		green-led {
 			label = "green-led";
 			gpios = <&fpga_bank0 5 GPIO_ACTIVE_LOW>;
-			default-state = "on";
+			linux,default-trigger = "heartbeat";
 		};
 
 		blue-led {
