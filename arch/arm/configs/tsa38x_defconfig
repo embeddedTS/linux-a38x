@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm 4.14.26-ts0 Kernel Configuration
+# Linux/arm 4.14.26 Kernel Configuration
 #
 CONFIG_ARM=y
 CONFIG_ARM_HAS_SG_CHAIN=y
@@ -3215,6 +3215,7 @@ CONFIG_DMA_ENGINE_RAID=y
 # CONFIG_AUXDISPLAY is not set
 CONFIG_UIO=y
 # CONFIG_UIO_CIF is not set
+CONFIG_UIO_DMABUF=m
 CONFIG_UIO_PDRV_GENIRQ=m
 CONFIG_UIO_DMEM_GENIRQ=m
 # CONFIG_UIO_AEC is not set
