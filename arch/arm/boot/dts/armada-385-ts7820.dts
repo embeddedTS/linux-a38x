@@ -411,6 +411,7 @@
 		spi-max-frequency = <20000000>;
 		reg = <0>;
 		u-boot,dm-pre-reloc;
+		status = "disabled";
 	};
 
 	/* FPGA Flash */
