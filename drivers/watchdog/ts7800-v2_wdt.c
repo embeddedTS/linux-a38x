@@ -157,11 +157,10 @@ static int wdog_panic_handler(struct notifier_block *this,
 		/* Make sure we do this only once. */
 		panic_event_handled = 1;
 
-		/* Arm WDT for 2 seconds instea dof instantly so there is time for the panic
+		/* Arm WDT for 2 seconds instead of instantly so there is time for the panic
 		 * to output on the serial console. */
 		mutex_lock(&wdtlock);
 		do_ts7800v2_wdt_write(200);
-		while(1);
 	}
 
 	return NOTIFY_OK;
@@ -182,10 +181,11 @@ static int wdog_reboot_handler(struct notifier_block *this,
 		/* Reset in 10ms */
 		do_ts7800v2_wdt_write(1);
 	} else {
-		/* Stall forever. */
+		/* We have no mechanism to halt.  Stall forever until we have a
+		 * better solution for this. */
 		do_ts7800v2_wdt_write(0);
+		while(1);
 	}
-	while(1);
 	return NOTIFY_OK;
 }
 
