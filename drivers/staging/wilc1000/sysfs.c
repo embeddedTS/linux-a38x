@@ -1,75 +1,119 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiaries.
+ * All rights reserved.
+ */
+
 #include <linux/kobject.h>
 #include "wilc_wfi_cfgoperations.h"
 
-struct p2p_mode
-{
-struct device *dev;
-unsigned int mode;
-};
-
-
-struct p2p_mode *p2p_mode_p;
-
-static struct kobject *p2p_kobj;
-static int p2p_mode;
+static struct kobject *wilc_kobj;
 static int device_created;
-static struct wilc_vif *vif;
+static struct wilc_vif *vif[NUM_CONCURRENT_IFC];
 
-static ssize_t p2p_mode_show(struct kobject *kobj, struct kobj_attribute *attr,
-            char *buf)
+static ssize_t wilc_sysfs_show(struct kobject *kobj,
+			       struct kobj_attribute *attr, char *buf)
 {
-   return sprintf(buf, "%d\n", p2p_mode);
+	int attr_val = -1;
+
+	if (strcmp(attr->attr.name, "p2p_mode") == 0)
+		attr_val = vif[0]->attr_sysfs.p2p_mode;
+	if (strcmp(attr->attr.name, "ant_swtch_mode") == 0)
+		attr_val = vif[0]->attr_sysfs.ant_swtch_mode;
+	else if (strcmp(attr->attr.name, "antenna1") == 0)
+		attr_val = vif[0]->attr_sysfs.antenna1;
+	else if (strcmp(attr->attr.name, "antenna2") == 0)
+		attr_val = vif[0]->attr_sysfs.antenna2;
+
+	return sprintf(buf, "%d\n", attr_val);
 }
 
-static ssize_t p2p_mode_store(struct kobject *kobj, struct kobj_attribute *attr,
-   const char *buf, size_t count)
+static ssize_t wilc_sysfs_store(struct kobject *kobj,
+				struct kobj_attribute *attr, const char *buf,
+				size_t count)
 {
+	int attr_val;
+	int i;
 
-   if (kstrtoint(buf, 10, &p2p_mode)) return 0;
+	for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
+		if (kstrtoint(buf, 10, &attr_val))
+			PRINT_ER(vif[i]->ndev,
+				 "Failed to convert p2p_mode string");
+		if (strcmp(attr->attr.name, "p2p_mode") == 0) {
+			vif[i]->attr_sysfs.p2p_mode = (attr_val?1:0);
+		} else if (strcmp(attr->attr.name, "ant_swtch_mode") == 0) {
+			if (attr_val > ANT_SWTCH_DUAL_GPIO_CTRL)
+				PRINT_ER(vif[i]->ndev,
+					 "Valid antenna switch modes:\n1-Single Antenna, 2-Dual Antenna\n");
+			else
+				vif[i]->attr_sysfs.ant_swtch_mode = attr_val;
+		} else if (strcmp(attr->attr.name, "antenna1") == 0) {
+			vif[i]->attr_sysfs.antenna1 = attr_val;
+		} else if (strcmp(attr->attr.name, "antenna2") == 0) {
+			vif[i]->attr_sysfs.antenna2 = attr_val;
+		}
+	}
 
-   if(p2p_mode)
-      vif->p2p_mode = 1;
-   else
-      vif->p2p_mode = 0;
-
-   return count;
+	return count;
 }
 
 static struct kobj_attribute p2p_mode_attr =
-   __ATTR(mode, 0664, p2p_mode_show, p2p_mode_store);
+	__ATTR(p2p_mode, 0664, wilc_sysfs_show, wilc_sysfs_store);
 
-static struct attribute *p2p_attrs[] = {
-   &p2p_mode_attr.attr,
-   NULL
+static struct kobj_attribute ant_swtch_mode_attr =
+	__ATTR(ant_swtch_mode, 0664, wilc_sysfs_show, wilc_sysfs_store);
+
+static struct kobj_attribute ant_swtch_antenna1_attr =
+	__ATTR(antenna1, 0664, wilc_sysfs_show, wilc_sysfs_store);
+
+static struct kobj_attribute ant_swtch_antenna2_attr =
+	__ATTR(antenna2, 0664, wilc_sysfs_show, wilc_sysfs_store);
+
+
+static struct attribute *wilc_attrs[] = {
+	&p2p_mode_attr.attr,
+	&ant_swtch_mode_attr.attr,
+	&ant_swtch_antenna1_attr.attr,
+	&ant_swtch_antenna2_attr.attr,
+	NULL
 };
 
 static struct attribute_group attr_group = {
-   .attrs = p2p_attrs,
+	.attrs = wilc_attrs,
 };
 
-void p2p_sysfs_init(struct wilc_vif *vi)
+void wilc_sysfs_init(struct wilc_vif *vif1, struct wilc_vif *vif2)
 {
-   int retval;
-   vif = vi;
+	int retval;
+	int i;
 
-   if(device_created)
-      return;
+	vif[0] = vif1;
+	vif[1] = vif2;
 
-   p2p_kobj = kobject_create_and_add("wilc_p2p", NULL);
-   if (!p2p_kobj) {
-      retval = -ENOMEM;
-      return;
-   }
+	if (device_created)
+		return;
 
-   retval = sysfs_create_group(p2p_kobj, &attr_group);
-   device_created = 1;
+	wilc_kobj = kobject_create_and_add("wilc", NULL);
+	if (!wilc_kobj) {
+		retval = -ENOMEM;
+		return;
+	}
+
+	for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
+		/* By default p2p mode is Group Owner */
+		vif[i]->attr_sysfs.p2p_mode = 1;
+		vif[i]->attr_sysfs.ant_swtch_mode = ANT_SWTCH_INVALID_GPIO_CTRL;
+		vif[i]->attr_sysfs.antenna1 = 0xFF;
+		vif[i]->attr_sysfs.antenna2 = 0xFF;
+	}
+	retval = sysfs_create_group(wilc_kobj, &attr_group);
+	device_created = 1;
 }
-EXPORT_SYMBOL_GPL(p2p_sysfs_init);
 
-void p2p_sysfs_exit(void)
+void wilc_sysfs_exit(void)
 {
-   device_created=0;
-   sysfs_remove_group(p2p_kobj, &attr_group);
-   kobject_put(p2p_kobj);
+	device_created = 0;
+	sysfs_remove_group(wilc_kobj, &attr_group);
+	kobject_put(wilc_kobj);
 }
 

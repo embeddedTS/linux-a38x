@@ -1,74 +1,56 @@
-/*!
- *  @file	wilc_wfi_netdevice.h
- *  @brief	Definitions for the network module
- *  @author	mdaftedar
- *  @date	01 MAR 2012
- *  @version	1.0
+/* SPDX-License-Identifier: GPL-2.0 */
+/*
+ * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiaries.
+ * All rights reserved.
  */
+
 #ifndef WILC_WFI_NETDEVICE
 #define WILC_WFI_NETDEVICE
 
-#define WILC_WFI_RX_INTR 0x0001
-#define WILC_WFI_TX_INTR 0x0002
-
-#define WILC_WFI_TIMEOUT 5
-#define WILC_MAX_NUM_PMKIDS  16
-#define PMKID_LEN  16
-#define PMKID_FOUND 1
- #define NUM_STA_ASSOCIATED 8
-
-#include <linux/module.h>
-#include <linux/init.h>
-#include <linux/moduleparam.h>
-#include <linux/sched.h>
-#include <linux/kernel.h>
-#include <linux/slab.h>
-#include <linux/errno.h>
-#include <linux/types.h>
-#include <linux/interrupt.h>
-#include <linux/time.h>
-#include <linux/in.h>
-#include <linux/netdevice.h>
-#include <linux/etherdevice.h>
-#include <linux/ip.h>
 #include <linux/tcp.h>
-#include <linux/skbuff.h>
 #include <linux/ieee80211.h>
 #include <net/cfg80211.h>
 #include <net/ieee80211_radiotap.h>
 #include <linux/if_arp.h>
-#include <linux/in6.h>
-#include <asm/checksum.h>
+#include <linux/version.h>
+#if KERNEL_VERSION(3, 13, 0) < LINUX_VERSION_CODE
+#include <linux/gpio/consumer.h>
+#else
+#include <linux/of_gpio.h>
+#include <linux/gpio.h>
+#endif
+
 #include "host_interface.h"
 #include "wilc_wlan.h"
-#include <linux/wireless.h>
-#include <linux/completion.h>
-#include <linux/mutex.h>
+#include "wilc_wlan_cfg.h"
 
-#define FLOW_CONTROL_LOWER_THRESHOLD	128
-#define FLOW_CONTROL_UPPER_THRESHOLD	256
+#define FLOW_CTRL_LOW_THRESHLD		128
+#define FLOW_CTRL_UP_THRESHLD		256
 
-enum stats_flags {
-	WILC_WFI_RX_PKT = BIT(0),
-	WILC_WFI_TX_PKT = BIT(1),
-};
+#define WILC_MAX_NUM_PMKIDS			16
+#define PMKID_LEN				16
+#define PMKID_FOUND				1
+#define NUM_STA_ASSOCIATED			8
 
-struct WILC_WFI_stats {
+#define NUM_REG_FRAME				2
+
+#define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
+#define DEFAULT_LINK_SPEED			72
+
+#define GET_PKT_OFFSET(a) (((a) >> 22) & 0x1ff)
+
+#define ANT_SWTCH_INVALID_GPIO_CTRL		0
+#define ANT_SWTCH_SNGL_GPIO_CTRL		1
+#define ANT_SWTCH_DUAL_GPIO_CTRL		2
+
+struct wilc_wfi_stats {
 	unsigned long rx_packets;
 	unsigned long tx_packets;
 	unsigned long rx_bytes;
 	unsigned long tx_bytes;
 	u64 rx_time;
 	u64 tx_time;
-
 };
-
-/*
- * This structure is private to each device. It is used to pass
- * packets in and out, so there is place for a packet
- */
-
-#define num_reg_frame 2
 
 struct wilc_wfi_key {
 	u8 *key;
@@ -85,16 +67,15 @@ struct wilc_wfi_wep_key {
 };
 
 struct sta_info {
-	u8 au8Sta_AssociatedBss[MAX_NUM_STA][ETH_ALEN];
+	u8 sta_associated_bss[MAX_NUM_STA][ETH_ALEN];
 };
 
 /*Parameters needed for host interface for  remaining on channel*/
-struct wilc_wfi_p2pListenParams {
-	struct ieee80211_channel *pstrListenChan;
-	enum nl80211_channel_type tenuChannelType;
-	u32 u32ListenDuration;
-	u64 u64ListenCookie;
-	u32 u32ListenSessionID;
+struct wilc_wfi_p2p_listen_params {
+	struct ieee80211_channel *listen_ch;
+	u32 listen_duration;
+	u64 listen_cookie;
+	u32 listen_session_id;
 };
 
 /* Struct to buffer eapol 1/4 frame */
@@ -104,48 +85,44 @@ struct wilc_buffered_eap {
 	u8 *buff;
 };
 
+struct wilc_p2p_var {
+	u8 local_random;
+	u8 recv_random;
+	bool is_wilc_ie;
+};
+
 struct wilc_priv {
 	struct wireless_dev *wdev;
-	struct cfg80211_scan_request *pstrScanReq;
+	struct cfg80211_scan_request *scan_req;
+	struct wilc_wfi_p2p_listen_params remain_on_ch_params;
+	u64 tx_cookie;
+	bool cfg_scanning;
+	u32 rcvd_ch_cnt;
 
-	struct wilc_wfi_p2pListenParams strRemainOnChanParams;
-	u64 u64tx_cookie;
-
-	bool bCfgScanning;
-	u32 u32RcvdChCount;
-
-	u8 au8AssociatedBss[ETH_ALEN];
+	u8 associated_bss[ETH_ALEN];
 	struct sta_info assoc_stainfo;
-	struct net_device_stats stats;
-	u8 monitor_flag;
-	int status;
-	struct WILC_WFI_packet *ppool;
-	struct WILC_WFI_packet *rx_queue; /* List of incoming packets */
-	int rx_int_enabled;
-	int tx_packetlen;
-	u8 *tx_packetdata;
 	struct sk_buff *skb;
-	spinlock_t lock;
 	struct net_device *dev;
-	struct napi_struct napi;
 	struct host_if_drv *hif_drv;
 	struct host_if_pmkid_attr pmkid_list;
-	struct WILC_WFI_stats netstats;
-	u8 WILC_WFI_wep_key[4][WLAN_KEY_LEN_WEP104];
-	u8 WILC_WFI_wep_key_len[4];
+	u8 wep_key[4][WLAN_KEY_LEN_WEP104];
+	u8 wep_key_len[4];
 	/* The real interface that the monitor is on */
 	struct net_device *real_ndev;
 	struct wilc_wfi_key *wilc_gtk[MAX_NUM_STA];
 	struct wilc_wfi_key *wilc_ptk[MAX_NUM_STA];
 	u8 wilc_groupkey;
-	/* mutexes */
-	struct mutex scan_req_lock;
-	/*  */
-	bool gbAutoRateAdjusted;
 
-	bool bInP2PlistenState;
+	struct mutex scan_req_lock;
+
+	bool p2p_listen_state;
 	struct wilc_buffered_eap *buffered_eap;
 
+	struct timer_list aging_timer;
+	struct timer_list eap_buff_timer;
+	struct network_info scanned_shadow[MAX_NUM_SCANNED_NETWORKS_SHADOW];
+	int scanned_cnt;
+	struct wilc_p2p_var p2p;
 };
 
 struct frame_reg {
@@ -153,41 +130,86 @@ struct frame_reg {
 	bool reg;
 };
 
+#define MAX_TCP_SESSION                25
+#define MAX_PENDING_ACKS               256
+
+struct ack_session_info {
+	u32 seq_num;
+	u32 bigger_ack_num;
+	u16 src_port;
+	u16 dst_port;
+	u16 status;
+};
+
+struct pending_acks {
+	u32 ack_num;
+	u32 session_index;
+	struct txq_entry_t  *txqe;
+};
+
+struct tcp_ack_filter {
+	struct ack_session_info ack_session_info[2 * MAX_TCP_SESSION];
+	struct pending_acks pending_acks[MAX_PENDING_ACKS];
+	u32 pending_base;
+	u32 tcp_session;
+	u32 pending_acks_idx;
+	bool enabled;
+};
+
+struct sysfs_attr_group {
+	bool p2p_mode;
+	u8 ant_swtch_mode;
+	u8 antenna1;
+	u8 antenna2;
+};
+
 struct wilc_vif {
 	u8 idx;
 	u8 iftype;
 	int monitor_flag;
 	int mac_opened;
-	struct frame_reg frame_reg[num_reg_frame];
+	struct frame_reg frame_reg[NUM_REG_FRAME];
 	struct net_device_stats netstats;
 	struct wilc *wilc;
-	u8 src_addr[ETH_ALEN];
 	u8 bssid[ETH_ALEN];
 	struct host_if_drv *hif_drv;
 	struct net_device *ndev;
-	u8 mode;
 	u8 ifc_id;
-	bool ifc_open;
-	bool p2p_mode;
+
+	struct sysfs_attr_group attr_sysfs;
+#ifdef DISABLE_PWRSAVE_AND_SCAN_DURING_IP
+	bool pwrsave_current_state;
+	struct timer_list during_ip_timer;
+	bool obtaining_ip;
+#endif
+	struct rf_info periodic_stats;
+	struct timer_list periodic_rssi;
+	struct tcp_ack_filter ack_filter;
+	bool connecting;
 };
 
 struct wilc {
 	const struct wilc_hif_func *hif_func;
 	int io_type;
-	int mac_status;
-	int gpio;
+	s8 mac_status;
+#if KERNEL_VERSION(3, 13, 0) < LINUX_VERSION_CODE
+	struct gpio_desc *gpio_irq;
+#else
+	int gpio_irq;
+#endif
 	bool initialized;
 	int dev_irq_num;
 	int close;
 	u8 vif_num;
 	struct wilc_vif *vif[NUM_CONCURRENT_IFC];
 	u8 open_ifcs;
-
+	/*protect head of transmit queue*/
 	struct mutex txq_add_to_head_cs;
+	/*protect txq_entry_t transmit queue*/
 	spinlock_t txq_spinlock;
-	spinlock_t cfg_pkt_spinlock;
-
+	/*protect rxq_entry_t receiver queue*/
 	struct mutex rxq_cs;
+	/* lock to protect hif access */
 	struct mutex hif_cs;
 
 	struct completion cfg_event;
@@ -197,7 +219,7 @@ struct wilc {
 	struct completion debug_thread_started;
 	struct task_struct *txq_thread;
 	struct task_struct *debug_thread;
-	
+
 	int quit;
 	int cfg_frame_in_use;
 	struct wilc_cfg_frame cfg_frame;
@@ -208,48 +230,40 @@ struct wilc {
 	u32 rx_buffer_offset;
 	u8 *tx_buffer;
 
-	unsigned long txq_spinlock_flags;
-	unsigned long cfg_pkt_flags;
-
-	struct txq_entry_t *txq_head;
-	struct txq_entry_t *txq_tail;
 	struct txq_handle txq[NQUEUES];
 	int txq_entries;
-	int txq_exit;
 
-	struct rxq_entry_t *rxq_head;
-	struct rxq_entry_t *rxq_tail;
-	int rxq_entries;
-	int rxq_exit;
-
-	unsigned char eth_src_address[NUM_CONCURRENT_IFC][6];
+	struct rxq_entry_t rxq_head;
 
 	const struct firmware *firmware;
 
 	struct device *dev;
-	bool suspend_event;
+	struct device *dt_dev;
 
-	struct rf_info dummy_statistics;
+	bool enable_ps;
+	enum wilc_chip_type chip;
 
-	enum wilc_chip_id chip_id;
-	enum device_active dev_active;
+	uint8_t power_status[DEV_MAX];
+	uint8_t keep_awake[DEV_MAX];
+	struct mutex cs;
+	int clients_count;
+	struct workqueue_struct *hif_workqueue;
+
+	struct wilc_cfg cfg;
+	void *bus_data;
 };
 
-struct WILC_WFI_mon_priv {
+struct wilc_wfi_mon_priv {
 	struct net_device *real_ndev;
 };
 
-int wilc_wlan_initialize(struct net_device *dev, struct wilc_vif *vif);
-
-//void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
-void wilc_mac_indicate(struct wilc *wilc, int flag);
-int wilc_lock_timeout(struct wilc *wilc, void *, u32 timeout);
+void wilc_frmw_to_linux(struct wilc_vif *vif, u8 *buff, u32 size,
+			u32 pkt_offset, u8 status);
+void wilc_mac_indicate(struct wilc *wilc);
 void wilc_netdev_cleanup(struct wilc *wilc);
-int wilc_netdev_init(struct wilc **wilc, struct device *, int io_type, int gpio,
+int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
 		     const struct wilc_hif_func *ops);
-void wilc_wlan_deinitialize(struct net_device *dev);
-void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
-int wilc_wlan_get_firmware(struct net_device *dev);
-int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode);
+void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+void wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode);
 
 #endif

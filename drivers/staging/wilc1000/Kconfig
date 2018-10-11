@@ -1,11 +1,17 @@
 config WILC
 	tristate
+
+config WLAN_VENDOR_MCHP
+        bool "Microhip devices"
+        default y
 	---help---
 	This adds support for WILC1000 & WILC3000 chips which support
 	IEEE 802.11n WiFi. WILC3000 is a WiFi-BT combo chip.
 
+if WLAN_VENDOR_MCHP
+
 config WILC_SDIO
-	tristate "Atmel WILC SDIO"
+	tristate "WILC SDIO"
 	depends on CFG80211 && INET && MMC
 	select WILC
 	---help---
@@ -20,7 +26,7 @@ config WILC_SDIO
 	  WILC3000 additionally supports BT 4.0 and BLE modes.
 
 config WILC_SPI
-	tristate "Atmel WILC SPI"
+	tristate "WILC SPI"
 	depends on CFG80211 && INET && SPI
 	select WILC
 	---help---
@@ -33,13 +39,14 @@ config WILC_SPI
 	  VDDIO. Select this if your platform is using the SPI bus.
 	  WILC3000 additionally supports BT 4.0 and BLE modes.
 
-config WILC1000_HW_OOB_INTR
-	bool "WILC1000 out of band interrupt"
-	depends on WILC1000_SDIO
+config WILC_HW_OOB_INTR
+	bool "WILC out of band interrupt"
+	depends on WILC_SDIO
 	default n
 	---help---
-	  This option enables out-of-band interrupt support for the WILC1000
-	  chipset. This OOB interrupt is intended to provide a faster interrupt
-	  mechanism for SDIO host controllers that don't support SDIO interrupt.
-	  Select this option If the SDIO host controller in your platform
-	  doesn't support SDIO time devision interrupt.
+	  This option enables out-of-band interrupt support for the WILC1000 &
+	  WILC3000 chipset. This OOB interrupt is intended to provide a faster
+	  interrupt mechanism for SDIO host controllers that don't support SDIO
+	  interrupt. Select this option If the SDIO host controller in your
+	  platform doesn't support SDIO time devision interrupt.
+endif
