@@ -154,6 +154,39 @@
 			#gpio-cells = <2>;
 			reg = <0x0 0x10>;
 			status = "okay";
+			/* Schematic or FPGA net names */
+			gpio-line-names = "en_nimble_4v_pad",
+				"en_nimble_3v3_pad",
+				"en_emmc_3v3_pad",
+				"en_sd_3v3_pad",
+				"red_led_padn",
+				"grn_led_padn",
+				"phy_0_led_padn",
+				"phy_1_led_padn",
+				"i2c_0_clk_pad",
+				"i2c_0_dat_pad",
+				"m2_i2c_clk_pad",
+				"m2_i2c_dat_pad",
+				"spi_0_fpga_cs3_padn",
+				"cpu_access_fpga_flash_padn",
+				"use_7800_boot_flash_pad",
+				"cpu_push_sw_padn",
+				"en_usb_5v_pad",
+				"blu_led_pad",
+				"phy_1512_reset_padn",
+				"en_wifi_pwr_pad",
+				"wifi_reset_padn",
+				"cage_sda_pad",
+				"cage_scl_pad",
+				"en_relay_1_pad",
+				"en_relay_2_pad",
+				"en_gps_3v3_pad",
+				"spi_0_wifi_cs2_padn",
+				"com_rts_pad",
+				"com_txd_pad",
+				"en_nim_usb_padn",
+				"prog_silab_clk_padn",
+				"prog_silab_data_padn";
 		};
 
 		fpga_uart0: fpga-uart0 {
