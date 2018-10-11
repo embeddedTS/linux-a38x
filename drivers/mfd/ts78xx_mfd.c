@@ -44,25 +44,20 @@ static void ts7820_handle_chanied_irq(struct irq_desc *desc)
 {
 	struct tsfpga_res *priv = irq_desc_get_handler_data(desc);
 	struct irq_chip *chip = irq_desc_get_chip(desc);
-	u32 status = readl(priv->base + TS7820_IRQ_STATUS);
+	unsigned long status;
+	u32 bit;
+	u32 virq;
 
 	chained_irq_enter(chip, desc);
 
-	if (unlikely(status == 0)) {
-		handle_untracked_irq(desc);
-		goto out;
+	while ((status = readl(priv->base + TS7820_IRQ_STATUS)) != 0) {
+		for_each_set_bit(bit, &status, 32) {
+			virq = irq_find_mapping(priv->domain, bit);
+			if (virq)
+				generic_handle_irq(virq);
+		}
 	}
 
-	do {
-		unsigned int bit = __ffs(status);
-		int irq = irq_find_mapping(priv->domain, bit);
-
-		status &= ~(1 << bit);
-		generic_handle_irq(irq);
-		status = readl(priv->base + TS7820_IRQ_STATUS);
-	} while (status);
-
-out:
 	chained_irq_exit(chip, desc);
 }
 
