@@ -1,5 +1,5 @@
 /*
- * Device Tree file for Technologic Systems TS-7840
+ * Device Tree file for Technologic Systems TS-7820
  *
  *  Copyright (C) 2017 Technologic Systems
  *
@@ -58,6 +58,63 @@
 		stdout-path = "serial0:115200n8";
 	};
 
+	i2c2: m2-i2c {
+		compatible = "i2c-gpio";
+		status = "okay";
+		gpios = <&fpga_bank0 11 0>, /* sda */
+			<&fpga_bank0 10 0>; /* scl */
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	i2c3: sfp-i2c {
+		compatible = "i2c-gpio";
+		status = "okay";
+		gpios = <&fpga_bank0 21 0>, /* sda */
+			<&fpga_bank0 22 0>; /* scl */
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		sfp1: at24c04@50 {
+			compatible = "atmel,24c02";
+			reg = <0x50>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		red-led {
+			label = "red-led";
+			gpios = <&fpga_bank0 4 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		green-led {
+			label = "green-led";
+			gpios = <&fpga_bank0 5 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "heartbeat";
+		};
+
+		blue-led {
+			label = "blue-led";
+			gpios = <&fpga_bank0 17 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		phy_0_led {
+			label = "phy-0-led";
+			gpios = <&fpga_bank0 6 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "f1072004.mdio-mii:00:1Gbps";
+		};
+
+		phy_1_led {
+			label = "phy-1-led";
+			gpios = <&fpga_bank0 7 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "f1072004.mdio-mii:01:1Gbps";
+		};
+	};
+
 	memory {
 		device_type = "memory";
 		reg = <0x00000000 0x40000000>; /* 1024 MB */
@@ -75,75 +132,139 @@
 			rtc@a3800 {
 				status = "disabled";
 			};
-
-			sata@a8000 {
-				status = "okay";
-			};
-
-			sdhci@d8000 {
-				bus-width = <4>;
-				no-1-8-v;
-				pinctrl-0 = <&sdhci_pins0>;
-				pinctrl-names = "default";
-				status = "okay";
-			};
-
-			usb@58000 {
-				status = "okay";
-			};
-
-			usb3@f0000 {
-				status = "okay";
-				usb-phy = <&usb3_phy>;
-			};
-		};
-
-		pcie {
-			status = "okay";
-
-			/* full size PCIe connector */
-			pcie@1,0 {
-				/* Port 0, Lane 0 */
-				status = "okay";
-			};
-
-			/* M.2 WIFI */
-			pcie@2,0 {
-				/* Port 1, Lane 0 */
-				status = "okay";
-			};
-
-			/* FPGA */
-			pcie@3,0 {
-				/* Port 2, Lane 0 */
-				status = "okay";
-			};
 		};
 	};
 
-	usb3_phy: usb3_phy {
-		compatible = "usb-nop-xceiv";
-		/* Set up a vcc_supply for U16 on the FPGA */
-		/*vcc-supply = <&reg_xhci0_vbus>; */
-	};
-
-	tsfpga {
+	tsfpga_pcie: tsfpga-pcie {
 		compatible = "technologic,ts78xx-mfd";
-		reg = <0 0xe6>;
-		reg-io-width = <4>;
 		#address-cells = <1>;
-		#size-cells = <0>;
+		#size-cells = <1>;
 
-		fpgaio: ts7800v2-gpio {
-			compatible = "technologic,ts7800v2-gpio";
+		interrupt-controller;
+		#interrupt-cells = <1>;
+
+		// Ideally this should be under the pcie bus 3 node
+		// and sub devices could specify regs within these ranges
+		// but it doesn't seem this works.
+		ranges = <0 0xe4080000 0x1000>; // BAR0
+
+		fpga_bank0: ts7820-gpio@0 {
+			compatible = "technologic,ts7820-gpio";
 			gpio-controller;
 			#gpio-cells = <2>;
-			reg = <0x0>;
-			base = <64>;
-			ngpios = <118>;
+			reg = <0x0 0x10>;
 			status = "okay";
+			/* Schematic or FPGA net names */
+			gpio-line-names = "en_nimble_4v_pad",
+				"en_nimble_3v3_pad",
+				"en_emmc_3v3_pad",
+				"en_sd_3v3_pad",
+				"red_led_padn",
+				"grn_led_padn",
+				"phy_0_led_padn",
+				"phy_1_led_padn",
+				"i2c_0_clk_pad",
+				"i2c_0_dat_pad",
+				"m2_i2c_clk_pad",
+				"m2_i2c_dat_pad",
+				"spi_0_fpga_cs3_padn",
+				"cpu_access_fpga_flash_padn",
+				"use_7800_boot_flash_pad",
+				"cpu_push_sw_padn",
+				"en_usb_5v_pad",
+				"blu_led_pad",
+				"phy_1512_reset_padn",
+				"en_wifi_pwr_pad",
+				"wifi_reset_padn",
+				"cage_sda_pad",
+				"cage_scl_pad",
+				"en_relay_1_pad",
+				"en_relay_2_pad",
+				"en_gps_3v3_pad",
+				"spi_0_wifi_cs2_padn",
+				"com_rts_pad",
+				"com_txd_pad",
+				"en_nim_usb_padn",
+				"prog_silab_clk_padn",
+				"prog_silab_data_padn";
+		};
+
+		fpga_uart0: fpga-uart0 {
+			compatible = "ns16550a";
+			reg = <0x80 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <0 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart1: fpga-uart1 {
+			compatible = "ns16550a";
+			reg = <0x88 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <1 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart2: fpga-uart2 {
+			compatible = "ns16550a";
+			reg = <0x90 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <2 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart3: fpga-uart3 {
+			compatible = "ns16550a";
+			reg = <0x98 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <3 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart4: fpga-uart4 {
+			compatible = "ns16550a";
+			reg = <0xa0 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <4 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart5: fpga-uart5 {
+			compatible = "ns16550a";
+			reg = <0xa8 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <5 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart6: fpga-uart6 {
+			compatible = "ns16550a";
+			reg = <0xb0 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <6 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+		};
+
+		fpga_uart7: fpga-uart7 {
+			compatible = "ns16550a";
+			reg = <0xb8 8>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <7 IRQ_TYPE_EDGE_RISING>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
 		};
 	};
+};
+
+&ahci0 {
+	status = "okay";
 };
 
 &bm {
@@ -163,7 +284,7 @@
 	phy-mode = "rgmii-id";
 	buffer-manager = <&bm>;
 	bm,pool-long = <0>;
-	bm,pool-short = <3>;
+	bm,pool-short = <1>;
 };
 
 /* magjack/sfgp port 1 */
@@ -173,18 +294,18 @@
 	status = "okay";
 	phy = <&phy1>;
 	phy-mode = "rgmii-id";
+	bm,pool-long = <2>;
+	bm,pool-short = <1>;
 	buffer-manager = <&bm>;
-	bm,pool-long = <1>;
-	bm,pool-short = <3>;
 };
 
 /* sgmii port to eth switch */
 &eth2 {
 	status = "okay";
 	phy-mode = "sgmii";
+	bm,pool-long = <3>;
+	bm,pool-short = <1>;
 	buffer-manager = <&bm>;
-	bm,pool-long = <2>;
-	bm,pool-short = <3>;
 
 	fixed-link {
 		speed = <1000>;
@@ -203,6 +324,11 @@
 		reg = <0x54>;
 		status = "okay";
 	};
+
+	rtc1: m41t00s@68 {
+		compatible = "m41t00";
+		reg = <0x68>;
+	};
 };
 
 &mdio {
@@ -211,10 +337,14 @@
 
 	phy0: ethernet-phy@0 {
 		reg = <0>;
+		/* Configure LED[0] to blink for activity */
+		marvell,reg-init = <3 16 0 0x1aa4>;
 	};
 
 	phy1: ethernet-phy@1 {
 		reg = <1>;
+		/* Configure LED[0] to blink for activity */
+		marvell,reg-init = <3 16 0 0x1aa4>;
 	};
 
 	switch@2 {
@@ -266,27 +396,73 @@
 	};
 };
 
+&pciec {
+	status = "okay";
+};
+
+&pcie2 {
+	status = "okay";
+};
+
+&pcie3 {
+	status = "okay";
+};
+
 &pinctrl {
 	sdhci_pins0: sdhci-pins0 {
 		marvell,pins = "mpp50", "mpp54", "mpp55",
 			       "mpp57", "mpp58", "mpp59";
 		marvell,function = "sd0";
 	};
+
+	wifi_gpio_pins: wifi-gpio-pins {
+		marvell,pins = "mpp18"; /* WIFI_IRQ */
+		marvell,function = "gpio";
+		bias-pull-up;
+	};
 };
+
+&sdhci {
+	bus-width = <4>;
+	no-1-8-v;
+	pinctrl-0 = <&sdhci_pins0>;
+	pinctrl-names = "default";
+	status = "okay";
+};	
 
 &spi0 {
 	pinctrl-names = "default";
-	pinctrl-0 = <&spi0_pins>;
+	pinctrl-0 = <&spi0_pins>, <&wifi_gpio_pins>;
 	status = "okay";
 	u-boot,dm-pre-reloc;
+	num-cs = <3>;
+	cs-gpios = <0>, <&fpga_bank0 13 0>, <&fpga_bank0 26 0>;
 
-	flash: n25q064@0 {
-		compatible = "st,n25q064";
+	/* Development boot flash.  Not onboard. */
+	flash0: n25q064@0 {
+		compatible = "micron,n25q064", "jedec,spi-nor";
 		spi-max-frequency = <20000000>;
 		reg = <0>;
-		#address-cells = <1>;
-		#size-cells = <1>;
 		u-boot,dm-pre-reloc;
+		status = "disabled";
+	};
+
+	/* FPGA Flash */
+	flash1: is25lq016b@1 {
+		compatible = "sst,is25lq016b,", "jedec,spi-nor";
+		spi-max-frequency = <20000000>;
+		reg = <1>;
+		u-boot,dm-pre-reloc;
+	};
+
+	wilc_spi@0 {
+		compatible = "microchip,wilc3000";
+		reg = <2>;
+		spi-max-frequency = <48000000>;
+		irq-gpios = <&gpio0 18 0>;
+		reset-gpios = <&fpga_bank0 20 0>;
+		chip_en-gpios = <&fpga_bank0 19 0>;
+		status = "okay";
 	};
 };
 
@@ -300,4 +476,16 @@
 /* We use external watchdog */
 &watchdog {
 	status = "disabled";	
+};
+
+&usb0 {
+	status = "okay";
+};
+
+&usb3_0 {
+	status = "okay";	
+};
+
+&usb3_1 {
+	status = "okay";	
 };
