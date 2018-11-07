@@ -2451,6 +2451,12 @@ config FB_SIMPLE
 	  Configuration re: surface address, size, and format must be provided
 	  through device tree, or plain old platform data.
 
+config FB_SIMPLE_TS7820
+	bool "TS-7820 framebuffer support"
+	depends on (FB_SIMPLE = y)
+	help
+	  Say Y if you want support for the TS-7820 framebuffer.
+
 source "drivers/video/fbdev/omap/Kconfig"
 source "drivers/video/fbdev/omap2/Kconfig"
 source "drivers/video/fbdev/mmp/Kconfig"

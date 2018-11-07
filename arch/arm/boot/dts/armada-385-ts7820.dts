@@ -182,11 +182,19 @@
 				"en_relay_2_pad",
 				"en_gps_3v3_pad",
 				"spi_0_wifi_cs2_padn",
-				"com_rts_pad",
-				"com_txd_pad",
+				"en_dig_in_0_1_pad",
+				"en_dig_in_2_3_pad",
 				"en_nim_usb_padn",
 				"prog_silab_clk_padn",
 				"prog_silab_data_padn";
+		};
+
+		tsfb: ts_fb {
+			compatible = "technologic,ts7820-fb";
+			reg = <0x30 0x4>;
+			width = <240>;
+			height = <320>;
+			status = "okay";
 		};
 
 		fpga_uart0: fpga-uart0 {
