@@ -97,3 +97,8 @@ endif
 
 obj-$(CONFIG_MMC_SDHCI_XENON)	+= sdhci-xenon-driver.o
 sdhci-xenon-driver-y		+= sdhci-xenon.o sdhci-xenon-phy.o
+
+#
+# SD Card driver for TS-78XX (Armada38x)
+#
+obj-$(CONFIG_TS_SDCARD)         += tssdcard.o
