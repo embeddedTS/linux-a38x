@@ -164,7 +164,7 @@ static void tsfpga_pci_remove(struct pci_dev *pdev)
 }
 
 static const struct pci_device_id tsfpga_pci_id_table[] = {
-	{PCI_DEVICE(0x1172, 0x0004), 0},	/* TS-7820/TS-7840 */
+	{PCI_DEVICE(0x1e6d, 0x7840), 0},
 	{0,}
 };
 MODULE_DEVICE_TABLE(pci, tsfpga_pci_id_table);
