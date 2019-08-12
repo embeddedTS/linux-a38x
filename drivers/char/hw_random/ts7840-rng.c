@@ -1,7 +1,7 @@
 /*
- * Driver for TS-7840's FPGA based RNG.  This outputs random data 
+ * Driver for TS-7840's FPGA based RNG.  This outputs random data
  * based on a core that outputs continuous data based on metastability
- * 
+ *
  * This file is licensed under  the terms of the GNU General Public
  * License version 2. This program is licensed "as is" without any
  * warranty of any kind, whether express or implied.
@@ -13,8 +13,6 @@
 #include <linux/io.h>
 #include <linux/hw_random.h>
 #include <linux/platform_device.h>
-
-#include <asm/io.h>
 
 struct ts7840_rng_priv {
 	struct hwrng rng;
