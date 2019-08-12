@@ -13,23 +13,22 @@
 #include <linux/pci.h>
 #include <linux/slab.h>
 
-struct tsfpga_res
-{
+struct tsfpga_res {
 	struct device	    *dev;
 	void __iomem	    *base;
 	struct irq_domain   *domain;
 	struct irq_chip	    irq_chip;
 };
 
-#define TS7820_IRQ_STATUS	0x4
-
 static int ts7820_irqdomain_map(struct irq_domain *d, unsigned int irq,
 				irq_hw_number_t hwirq)
 {
-	struct tsfpga_res *data = d->host_data;
+	struct tsfpga_res *priv = d->host_data;
 
-	irq_set_chip_and_handler(irq, &data->irq_chip, handle_simple_irq);
-	irq_set_chip_data(irq, data);
+	dev_dbg(priv->dev, "Mapped IRQ IRQ %d\n", irq);
+
+	irq_set_chip_and_handler(irq, &priv->irq_chip, handle_simple_irq);
+	irq_set_chip_data(irq, priv);
 	irq_set_noprobe(irq);
 
 	return 0;
@@ -40,43 +39,49 @@ static const struct irq_domain_ops ts7820_ic_ops = {
 	.xlate = irq_domain_xlate_onecell,
 };
 
-static void ts7820_handle_chanied_irq(struct irq_desc *desc)
+static void ts7820_handle_chained_irq(struct irq_desc *desc)
 {
 	struct tsfpga_res *priv = irq_desc_get_handler_data(desc);
 	struct irq_chip *chip = irq_desc_get_chip(desc);
-	unsigned long status;
-	u32 bit;
-	u32 virq;
+	u32 virq = irq_find_mapping(priv->domain, 0);
+
+	dev_dbg(priv->dev, "Chained IRQ VIRQ %d\n", virq);
 
 	chained_irq_enter(chip, desc);
-
-	while ((status = readl(priv->base + TS7820_IRQ_STATUS)) != 0) {
-		for_each_set_bit(bit, &status, 32) {
-			virq = irq_find_mapping(priv->domain, bit);
-			if (virq)
-				generic_handle_irq(virq);
-		}
-	}
-
+	generic_handle_irq(virq);
 	chained_irq_exit(chip, desc);
+}
+
+static void tsfpga_pcie_add_ranges(struct pci_dev *pdev, struct device_node *np)
+{
+	struct property *prop;
+	u32 start, end;
+	struct of_changeset ocs;
+	uint32_t *val;
+
+	start = pci_resource_start(pdev, 0);
+	end = pci_resource_end(pdev, 0);
+
+	prop = devm_kcalloc(&pdev->dev, 1, sizeof(*prop), GFP_KERNEL);
+	val = devm_kcalloc(&pdev->dev, 1, sizeof(uint32_t)*3, GFP_KERNEL);
+	prop->name = devm_kstrdup(&pdev->dev, "ranges", GFP_KERNEL);
+	val[0] = 0x0;
+	val[1] = cpu_to_be32(start);
+	val[2] = cpu_to_be32(end - start);
+	prop->length = sizeof(uint32_t) * 3;
+	prop->value = val;
+
+	of_changeset_init(&ocs);
+	of_changeset_add_property(&ocs, np, prop);
+	of_changeset_apply(&ocs);
 }
 
 static void ts7820_irq_mask(struct irq_data *d)
 {
-	/*struct ts7820_irq_data *data = irq_data_get_irq_chip_data(d);
-	u32 reg = readl(data->base + TS7820_IRQ_MASK);
-	u32 mask = 1 << d->hwirq;
-
-	writel(reg | mask, data->base + TS7820_IRQ_MASK);*/
 }
 
 static void ts7820_irq_unmask(struct irq_data *d)
 {
-	/*struct ts7820_irq_data *data = irq_data_get_irq_chip_data(d);
-	u32 reg = readl(data->base + TS7820_IRQ_MASK);
-	u32 mask = 1 << d->hwirq;
-
-	writel(reg & ~mask, data->base + TS7820_IRQ_MASK);*/
 }
 
 static int tsfpga_pci_probe(struct pci_dev *pdev,
@@ -109,6 +114,7 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 		goto out_pci_disable_device;
 	}
 	pdev->dev.of_node = np;
+	tsfpga_pcie_add_ranges(pdev, np);
 
 	/* We only use BAR0 */
 	start = pci_resource_start(pdev, 0);
@@ -118,25 +124,26 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 		goto out_pci_disable_device;
 	}
 
-	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
+	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI);
 	if (err < 0) {
 		err = -ENODEV;
 		goto out_pci_disable_device;
 	}
-
-	priv->base = ioremap_nocache(start, 0x10);
+	priv->base = ioremap_nocache(start, 0x100);
 	if (IS_ERR(priv->base)) {
 		err = PTR_ERR(priv->base);
 		dev_err(&pdev->dev, "ioremap failed for fpga mem\n");
 		goto out_pci_disable_device;
 	}
 
+	dev_info(priv->dev, "FPGA base: 0x%p\n", (void *)start);
+
 	irq_chip = &priv->irq_chip;
 	irq_chip->name = pdev->dev.of_node->name;
 	irq_chip->irq_mask = ts7820_irq_mask;
 	irq_chip->irq_unmask = ts7820_irq_unmask;
 
-	priv->domain = irq_domain_add_linear(np, 8, &ts7820_ic_ops, priv);
+	priv->domain = irq_domain_add_linear(np, 2, &ts7820_ic_ops, priv);
 	if (!priv->domain) {
 		dev_err(&pdev->dev, "cannot add IRQ domain\n");
 		err = -ENOMEM;
@@ -144,7 +151,7 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 	}
 
 	irq_set_chained_handler_and_data(pci_irq_vector(pdev, 0),
-		ts7820_handle_chanied_irq, priv);
+		ts7820_handle_chained_irq, priv);
 
 	devm_of_platform_populate(&pdev->dev);
 
