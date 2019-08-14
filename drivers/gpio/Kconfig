@@ -1102,6 +1102,7 @@ config GPIO_TPS68470
 config GPIO_TS7820
 	tristate "Technologic Systems' TS-7820/TS-7840 GPIO Support"
 	select GPIO_GENERIC
+	select GPIOLIB_IRQCHIP
 	depends on MFD_TS78XX
 	default n
 	help

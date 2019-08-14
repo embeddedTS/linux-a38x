@@ -10,6 +10,8 @@
 
 #include <linux/gpio/driver.h>
 #include <linux/module.h>
+#include <linux/interrupt.h>
+#include <linux/pm_runtime.h>
 #include <linux/of_address.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
@@ -23,105 +25,255 @@
  * but no support for a separate OE_CLR/OE_SET
  */
 
-#define TS7820_IN	0x0c
-#define TS7820_OUT_SET	0x08
-#define TS7820_OUT_CLR	0x0c
-#define TS7820_OE_IN	0x00
-#define TS7820_OE_SET	0x00
-#define TS7820_OE_CLR	0x04
+/* Read Decodes */
+#define TS7820_OE_IN		0x00
+#define TS7820_OUT_DATA		0x08
+#define TS7820_IN		0x0C
+//#define TS7820_IRQ_EN		0x10
+#define TS7820_IRQSTATUS	0x14
 
-struct ts7820_gpio_chip {
-	struct gpio_chip gpio;
+/* Write Decodes */
+#define TS7820_OE_SET		0x00
+#define TS7820_OE_CLR		0x04
+#define TS7820_DAT_SET		0x08
+#define TS7820_DAT_CLR		0x0C
+#define TS7820_IRQ_EN		0x10
+#define TS7820_IRQ_NPOL		0x18 /* 1 = active low */
+
+struct ts7820_gpio_priv {
 	void __iomem *base;
+	struct device *dev;
+	struct gpio_chip gpio_chip;
+	struct irq_chip irq_chip;
+	uint32_t irqen;
+	uint32_t both_edge;
+	uint32_t npol;
+	unsigned int irq_parent;
 };
 
 static void ts7820_gpio_set(struct gpio_chip *chip, unsigned int pin, int val)
 {
-	struct ts7820_gpio_chip *gc = gpiochip_get_data(chip);
+	struct ts7820_gpio_priv *priv = gpiochip_get_data(chip);
 
 	if (val)
-		writel(BIT(pin), gc->base + TS7820_OUT_SET);
+		writel(BIT(pin), priv->base + TS7820_DAT_SET);
 	else
-		writel(BIT(pin), gc->base + TS7820_OUT_CLR);
+		writel(BIT(pin), priv->base + TS7820_DAT_CLR);
 }
 
 static void ts7820_gpio_set_multiple(struct gpio_chip *chip,
 				     unsigned long *mask,
 				     unsigned long *bits)
 {
-	struct ts7820_gpio_chip *gc = gpiochip_get_data(chip);
+	struct ts7820_gpio_priv *priv = gpiochip_get_data(chip);
 
-	writel(*mask & *bits, gc->base + TS7820_OUT_SET);
-	writel(*mask & (~*bits), gc->base + TS7820_OUT_CLR);
+	writel(*mask & *bits, priv->base + TS7820_DAT_SET);
+	writel(*mask & (~*bits), priv->base + TS7820_DAT_CLR);
 }
 
 static int ts7820_gpio_get(struct gpio_chip *chip, unsigned int pin)
 {
-	struct ts7820_gpio_chip *gc = gpiochip_get_data(chip);
+	struct ts7820_gpio_priv *priv = gpiochip_get_data(chip);
 
-	return !!(readl(gc->base + TS7820_IN) & BIT(pin));
+	return !!(readl(priv->base + TS7820_IN) & BIT(pin));
 }
 
 static int ts7820_gpio_direction_input(struct gpio_chip *chip,
 					unsigned int pin)
 {
-	struct ts7820_gpio_chip *gc = gpiochip_get_data(chip);
+	struct ts7820_gpio_priv *priv = gpiochip_get_data(chip);
 
-	writel(BIT(pin), gc->base + TS7820_OE_CLR);
+	writel(BIT(pin), priv->base + TS7820_OE_CLR);
 	return 0;
 }
 
 static int ts7820_gpio_direction_output(struct gpio_chip *chip,
 					unsigned int pin, int val)
 {
-	struct ts7820_gpio_chip *gc = gpiochip_get_data(chip);
+	struct ts7820_gpio_priv *priv = gpiochip_get_data(chip);
 
 	ts7820_gpio_set(chip, pin, val);
-	writel(BIT(pin), gc->base + TS7820_OE_SET);
+	writel(BIT(pin), priv->base + TS7820_OE_SET);
 	return 0;
 }
 
 static int ts7820_gpio_direction_get(struct gpio_chip *chip,
 				     unsigned int pin)
 {
-	struct ts7820_gpio_chip *gc = gpiochip_get_data(chip);
+	struct ts7820_gpio_priv *priv = gpiochip_get_data(chip);
 
-	return !!(readl(gc->base + TS7820_OE_IN) & BIT(pin));
+	return !(readl(priv->base + TS7820_OE_IN) & BIT(pin));
 }
 
-static const struct gpio_chip ts7820_chip = {
-	.label			= "ts7820-gpio",
-	.direction_input	= ts7820_gpio_direction_input,
-	.direction_output	= ts7820_gpio_direction_output,
-	.get_direction		= ts7820_gpio_direction_get,
-	.set			= ts7820_gpio_set,
-	.set_multiple		= ts7820_gpio_set_multiple,
-	.get			= ts7820_gpio_get,
-	.base			= -1,
-	.ngpio			= 32,
-	.owner			= THIS_MODULE,
-};
+static void gpio_ts7820_irq_disable(struct irq_data *d)
+{
+	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
+	struct ts7820_gpio_priv *priv = gpiochip_get_data(gc);
+
+	priv->irqen &= ~BIT(irqd_to_hwirq(d));
+	writel(priv->irqen, priv->base + TS7820_IRQ_EN);
+}
+
+static void gpio_ts7820_irq_enable(struct irq_data *d)
+{
+	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
+	struct ts7820_gpio_priv *priv = gpiochip_get_data(gc);
+
+	priv->irqen |= BIT(irqd_to_hwirq(d));
+	writel(priv->irqen, priv->base + TS7820_IRQ_EN);
+}
+
+static int gpio_ts7820_irq_set_type(struct irq_data *d, unsigned int type)
+{
+	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
+	struct ts7820_gpio_priv *priv = gpiochip_get_data(gc);
+	unsigned int hwirq = irqd_to_hwirq(d);
+	int ret = 0;
+
+	dev_dbg(priv->dev, "set_type irq %d to %d\n", hwirq, type);
+
+	priv->npol &= ~hwirq;
+
+	switch (type & IRQ_TYPE_SENSE_MASK) {
+	case IRQ_TYPE_EDGE_RISING:
+		priv->npol &= ~(1 << hwirq);
+		writel(priv->npol, priv->base + TS7820_IRQ_NPOL);
+		break;
+	case IRQ_TYPE_EDGE_BOTH:
+		priv->both_edge |= (1 << hwirq);
+		break;
+	case IRQ_TYPE_EDGE_FALLING:
+		priv->npol |= (1 << hwirq);
+		writel(priv->npol, priv->base + TS7820_IRQ_NPOL);
+		break;
+	case IRQ_TYPE_LEVEL_LOW:
+	case IRQ_TYPE_LEVEL_HIGH:
+	default:
+		ret = -EINVAL;
+	}
+
+	dev_dbg(priv->dev, "set_type npol 0x%X\n", priv->npol);
+	dev_dbg(priv->dev, "set_type both_edge 0x%X\n", priv->both_edge);
+
+	return ret;
+}
+
+static irqreturn_t gpio_ts7820_irq_handler(int irq, void *dev_id)
+{
+	struct ts7820_gpio_priv *priv = dev_id;
+	unsigned long status, irqen;
+	unsigned int irqs_handled = 0;
+	u32 bit, virq;
+
+	status = readl(priv->base + TS7820_IRQSTATUS);
+	irqen = priv->irqen;
+
+	dev_dbg(priv->dev, "raw status: 0x%lX\n", status);
+	dev_dbg(priv->dev, "raw irqen: 0x%lX\n", irqen);
+
+	status &= irqen;
+	for_each_set_bit(bit, &status, 32) {
+		virq = irq_find_mapping(priv->gpio_chip.irqdomain, bit);
+		if (virq) {
+			dev_dbg(priv->dev, "Dispatching IRQ: %d\n",
+				virq);
+			generic_handle_irq(virq);
+			irqs_handled++;
+		}
+	}
+	
+	/* Swap polarity for any IRQs triggered looking for
+	 * both rising/falling edges*/
+	if(status & priv->both_edge) {
+		dev_dbg(priv->dev, "old_npol: 0x%X\n", priv->npol);
+		priv->npol = (status & priv->both_edge) ^ priv->npol;
+		dev_dbg(priv->dev, "both_edge: 0x%X, new_npol: 0x%X\n",
+			priv->both_edge, priv->npol);
+		dev_dbg(priv->dev, "new_npol: 0x%X\n", priv->npol);
+		writel(priv->npol, priv->base + TS7820_IRQ_NPOL);
+	}
+
+	return irqs_handled ? IRQ_HANDLED : IRQ_NONE;
+}
 
 static int ts7820_gpio_probe(struct platform_device *pdev)
 {
-	struct ts7820_gpio_chip *gc;
-	struct resource *res;
+	struct device *dev = &pdev->dev;
+	const char *name = dev_name(&pdev->dev);
+	struct ts7820_gpio_priv *priv;
+	struct resource *io, *irq;
+	struct gpio_chip *gpio_chip;
+	struct irq_chip *irq_chip;
+	int err;
 
-	gc = devm_kzalloc(&pdev->dev, sizeof(struct ts7820_gpio_chip),
+	priv = devm_kzalloc(dev, sizeof(struct ts7820_gpio_priv),
 			  GFP_KERNEL);
-	if (!gc)
+	if (!priv)
 		return -ENOMEM;
 
-	gc->gpio = ts7820_chip;
-	gc->gpio.parent = &pdev->dev;
-	platform_set_drvdata(pdev, gc);
+	platform_set_drvdata(pdev, priv);
+	priv->dev = dev;
 
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	gc->base = devm_ioremap_resource(&pdev->dev, res);
-	if (IS_ERR(gc->base))
-		return PTR_ERR(gc->base);
+	io = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	if (!io) {
+		dev_err(dev, "missing IOMEM\n");
+		return -EINVAL;
+	}
 
-	return devm_gpiochip_add_data(&pdev->dev, &gc->gpio, gc);
+	pm_runtime_enable(dev);
+
+	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+	priv->base = devm_ioremap_nocache(dev, io->start, resource_size(io));
+	if (!priv->base) {
+		dev_err(dev, "failed to remap I/O memory\n");
+		return -ENXIO;
+	}
+
+	gpio_chip = &priv->gpio_chip;
+	gpio_chip->label = name;
+	gpio_chip->direction_input = ts7820_gpio_direction_input,
+	gpio_chip->direction_output = ts7820_gpio_direction_output,
+	gpio_chip->get_direction = ts7820_gpio_direction_get,
+	gpio_chip->set = ts7820_gpio_set,
+	gpio_chip->set_multiple = ts7820_gpio_set_multiple,
+	gpio_chip->get = ts7820_gpio_get,
+	gpio_chip->base = -1,
+	gpio_chip->ngpio = 32,
+	gpio_chip->owner = THIS_MODULE,
+	gpio_chip->parent = dev;
+
+	err = gpiochip_add_data(gpio_chip, priv);
+	if (err) {
+		dev_err(dev, "failed to add GPIO controller\n");
+		return err;
+	}
+
+	if (irq) {
+		priv->irq_parent = irq->start;
+		irq_chip = &priv->irq_chip;
+		irq_chip->name = name;
+		irq_chip->parent_device = dev;
+		irq_chip->irq_mask = gpio_ts7820_irq_disable;
+		irq_chip->irq_unmask = gpio_ts7820_irq_enable;
+		irq_chip->irq_set_type = gpio_ts7820_irq_set_type;
+		irq_chip->flags	= IRQCHIP_SET_TYPE_MASKED;
+
+		err = gpiochip_irqchip_add(gpio_chip, irq_chip, 0,
+					   handle_simple_irq, IRQ_TYPE_NONE);
+		if (err) {
+			dev_err(dev, "cannot add irqchip\n");
+			return err;
+		}
+		gpiochip_set_chained_irqchip(gpio_chip, irq_chip,
+					     priv->irq_parent, NULL);
+		if (devm_request_irq(dev, irq->start, gpio_ts7820_irq_handler,
+				     IRQF_SHARED, name, priv)) {
+			dev_err(dev, "failed to request IRQ\n");
+			return -ENOENT;
+		}
+	}
+
+	return 0;
 }
 
 static const struct of_device_id ts7820_gpio_of_match[] = {
