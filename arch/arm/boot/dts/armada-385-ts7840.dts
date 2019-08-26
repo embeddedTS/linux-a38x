@@ -349,6 +349,16 @@
 			reg-io-width = <1>;
 			status = "okay";
 		};
+
+		can@200 {
+			compatible = "nxp,sja1000";
+			reg = <0x200 0x00000100>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <10 IRQ_TYPE_LEVEL_HIGH>;
+			reg-io-width = <1>;
+			nxp,external-clock-frequency = <16000000>;
+			status = "okay";
+		};
 	};
 };
 
