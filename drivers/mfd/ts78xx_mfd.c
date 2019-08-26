@@ -13,44 +13,11 @@
 #include <linux/pci.h>
 #include <linux/slab.h>
 
-struct tsfpga_res {
+struct tsfpga_priv {
 	struct device	    *dev;
 	void __iomem	    *base;
-	struct irq_domain   *domain;
-	struct irq_chip	    irq_chip;
+	int		    irq_parent;
 };
-
-static int ts7820_irqdomain_map(struct irq_domain *d, unsigned int irq,
-				irq_hw_number_t hwirq)
-{
-	struct tsfpga_res *priv = d->host_data;
-
-	dev_dbg(priv->dev, "Mapped IRQ IRQ %d\n", irq);
-
-	irq_set_chip_and_handler(irq, &priv->irq_chip, handle_simple_irq);
-	irq_set_chip_data(irq, priv);
-	irq_set_noprobe(irq);
-
-	return 0;
-}
-
-static const struct irq_domain_ops ts7820_ic_ops = {
-	.map = ts7820_irqdomain_map,
-	.xlate = irq_domain_xlate_onecell,
-};
-
-static void ts7820_handle_chained_irq(struct irq_desc *desc)
-{
-	struct tsfpga_res *priv = irq_desc_get_handler_data(desc);
-	struct irq_chip *chip = irq_desc_get_chip(desc);
-	u32 virq = irq_find_mapping(priv->domain, 0);
-
-	dev_dbg(priv->dev, "Chained IRQ VIRQ %d\n", virq);
-
-	chained_irq_enter(chip, desc);
-	generic_handle_irq(virq);
-	chained_irq_exit(chip, desc);
-}
 
 static void tsfpga_pcie_add_ranges(struct pci_dev *pdev, struct device_node *np)
 {
@@ -76,24 +43,15 @@ static void tsfpga_pcie_add_ranges(struct pci_dev *pdev, struct device_node *np)
 	of_changeset_apply(&ocs);
 }
 
-static void ts7820_irq_mask(struct irq_data *d)
-{
-}
-
-static void ts7820_irq_unmask(struct irq_data *d)
-{
-}
-
 static int tsfpga_pci_probe(struct pci_dev *pdev,
 			   const struct pci_device_id *ent)
 {
-	struct tsfpga_res *priv;
+	struct tsfpga_priv *priv;
 	struct device_node *np;
-	struct irq_chip *irq_chip;
 	int err = 0;
 	unsigned long start, end;
 
-	priv = devm_kzalloc(&pdev->dev, sizeof(struct tsfpga_res), GFP_KERNEL);
+	priv = devm_kzalloc(&pdev->dev, sizeof(struct tsfpga_priv), GFP_KERNEL);
 	if (!priv) {
 		err = -ENOMEM;
 		goto out;
@@ -124,34 +82,15 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 		goto out_pci_disable_device;
 	}
 
-	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI);
+	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_LEGACY);
 	if (err < 0) {
 		err = -ENODEV;
 		goto out_pci_disable_device;
 	}
-	priv->base = ioremap_nocache(start, 0x100);
-	if (IS_ERR(priv->base)) {
-		err = PTR_ERR(priv->base);
-		dev_err(&pdev->dev, "ioremap failed for fpga mem\n");
-		goto out_pci_disable_device;
-	}
+	priv->irq_parent = pci_irq_vector(pdev, 0);
 
 	dev_info(priv->dev, "FPGA base: 0x%p\n", (void *)start);
-
-	irq_chip = &priv->irq_chip;
-	irq_chip->name = pdev->dev.of_node->name;
-	irq_chip->irq_mask = ts7820_irq_mask;
-	irq_chip->irq_unmask = ts7820_irq_unmask;
-
-	priv->domain = irq_domain_add_linear(np, 2, &ts7820_ic_ops, priv);
-	if (!priv->domain) {
-		dev_err(&pdev->dev, "cannot add IRQ domain\n");
-		err = -ENOMEM;
-		goto out_pci_disable_device;
-	}
-
-	irq_set_chained_handler_and_data(pci_irq_vector(pdev, 0),
-		ts7820_handle_chained_irq, priv);
+	dev_info(priv->dev, "FPGA IRQ: %d\n", priv->irq_parent);
 
 	devm_of_platform_populate(&pdev->dev);
 
