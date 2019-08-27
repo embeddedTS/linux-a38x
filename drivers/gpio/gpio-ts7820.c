@@ -15,21 +15,14 @@
 #include <linux/of_address.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
-
-/*
- * 0: write=OE set, read=current OE
- * 4: write=OE clr, read=Model reg in upper 16, fpga rev in lower 16
- * 8: write=output set, read=current output
- * c: write=output clr, read=current inputs
- * This could almost be handled by the bgpio driver,
- * but no support for a separate OE_CLR/OE_SET
- */
+#include <linux/delay.h>
+#include <linux/spinlock.h>
 
 /* Read Decodes */
 #define TS7820_OE_IN		0x00
 #define TS7820_OUT_DATA		0x08
 #define TS7820_IN		0x0C
-//#define TS7820_IRQ_EN		0x10
+/*#define TS7820_IRQ_EN		0x10 */
 #define TS7820_IRQSTATUS	0x14
 
 /* Write Decodes */
@@ -45,8 +38,8 @@ struct ts7820_gpio_priv {
 	struct device *dev;
 	struct gpio_chip gpio_chip;
 	struct irq_chip irq_chip;
+	spinlock_t lock;
 	uint32_t irqen;
-	uint32_t both_edge;
 	uint32_t npol;
 	unsigned int irq_parent;
 };
@@ -109,18 +102,26 @@ static void gpio_ts7820_irq_disable(struct irq_data *d)
 {
 	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
 	struct ts7820_gpio_priv *priv = gpiochip_get_data(gc);
+	unsigned long flags;
 
+	spin_lock_irqsave(&priv->lock, flags);
 	priv->irqen &= ~BIT(irqd_to_hwirq(d));
 	writel(priv->irqen, priv->base + TS7820_IRQ_EN);
+	spin_unlock_irqrestore(&priv->lock, flags);
+	dev_dbg(priv->dev, "irqen set to 0x%X\n", priv->irqen);
 }
 
 static void gpio_ts7820_irq_enable(struct irq_data *d)
 {
 	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
 	struct ts7820_gpio_priv *priv = gpiochip_get_data(gc);
+	unsigned long flags;
 
+	spin_lock_irqsave(&priv->lock, flags);
 	priv->irqen |= BIT(irqd_to_hwirq(d));
 	writel(priv->irqen, priv->base + TS7820_IRQ_EN);
+	spin_unlock_irqrestore(&priv->lock, flags);
+	dev_dbg(priv->dev, "irqen set to 0x%X\n", priv->irqen);
 }
 
 static int gpio_ts7820_irq_set_type(struct irq_data *d, unsigned int type)
@@ -129,31 +130,29 @@ static int gpio_ts7820_irq_set_type(struct irq_data *d, unsigned int type)
 	struct ts7820_gpio_priv *priv = gpiochip_get_data(gc);
 	unsigned int hwirq = irqd_to_hwirq(d);
 	int ret = 0;
+	unsigned long flags;
 
 	dev_dbg(priv->dev, "set_type irq %d to %d\n", hwirq, type);
 
+	spin_lock_irqsave(&priv->lock, flags);
 	priv->npol &= ~hwirq;
 
 	switch (type & IRQ_TYPE_SENSE_MASK) {
-	case IRQ_TYPE_EDGE_RISING:
+	case IRQ_TYPE_LEVEL_HIGH:
 		priv->npol &= ~(1 << hwirq);
 		writel(priv->npol, priv->base + TS7820_IRQ_NPOL);
 		break;
-	case IRQ_TYPE_EDGE_BOTH:
-		priv->both_edge |= (1 << hwirq);
-		break;
-	case IRQ_TYPE_EDGE_FALLING:
+	case IRQ_TYPE_LEVEL_LOW:
 		priv->npol |= (1 << hwirq);
 		writel(priv->npol, priv->base + TS7820_IRQ_NPOL);
 		break;
-	case IRQ_TYPE_LEVEL_LOW:
-	case IRQ_TYPE_LEVEL_HIGH:
+	case IRQ_TYPE_EDGE_FALLING:
 	default:
 		ret = -EINVAL;
 	}
+	spin_unlock_irqrestore(&priv->lock, flags);
 
 	dev_dbg(priv->dev, "set_type npol 0x%X\n", priv->npol);
-	dev_dbg(priv->dev, "set_type both_edge 0x%X\n", priv->both_edge);
 
 	return ret;
 }
@@ -164,12 +163,12 @@ static irqreturn_t gpio_ts7820_irq_handler(int irq, void *dev_id)
 	unsigned long status, irqen;
 	unsigned int irqs_handled = 0;
 	u32 bit, virq;
+	unsigned long flags;
 
+	spin_lock_irqsave(&priv->lock, flags);
 	status = readl(priv->base + TS7820_IRQSTATUS);
 	irqen = priv->irqen;
-
-	dev_dbg(priv->dev, "raw status: 0x%lX\n", status);
-	dev_dbg(priv->dev, "raw irqen: 0x%lX\n", irqen);
+	spin_unlock_irqrestore(&priv->lock, flags);
 
 	status &= irqen;
 	for_each_set_bit(bit, &status, 32) {
@@ -181,17 +180,9 @@ static irqreturn_t gpio_ts7820_irq_handler(int irq, void *dev_id)
 			irqs_handled++;
 		}
 	}
-	
-	/* Swap polarity for any IRQs triggered looking for
-	 * both rising/falling edges*/
-	if(status & priv->both_edge) {
-		dev_dbg(priv->dev, "old_npol: 0x%X\n", priv->npol);
-		priv->npol = (status & priv->both_edge) ^ priv->npol;
-		dev_dbg(priv->dev, "both_edge: 0x%X, new_npol: 0x%X\n",
-			priv->both_edge, priv->npol);
-		dev_dbg(priv->dev, "new_npol: 0x%X\n", priv->npol);
-		writel(priv->npol, priv->base + TS7820_IRQ_NPOL);
-	}
+
+	dev_dbg(priv->dev, "raw status: 0x%lX\n", status);
+	dev_dbg(priv->dev, "raw irqen: 0x%lX\n", irqen);
 
 	return irqs_handled ? IRQ_HANDLED : IRQ_NONE;
 }
@@ -241,6 +232,7 @@ static int ts7820_gpio_probe(struct platform_device *pdev)
 	gpio_chip->ngpio = 32,
 	gpio_chip->owner = THIS_MODULE,
 	gpio_chip->parent = dev;
+	spin_lock_init(&priv->lock);
 
 	err = gpiochip_add_data(gpio_chip, priv);
 	if (err) {
@@ -259,13 +251,14 @@ static int ts7820_gpio_probe(struct platform_device *pdev)
 		irq_chip->flags	= IRQCHIP_SET_TYPE_MASKED;
 
 		err = gpiochip_irqchip_add(gpio_chip, irq_chip, 0,
-					   handle_simple_irq, IRQ_TYPE_NONE);
+					   handle_level_irq, IRQ_TYPE_NONE);
 		if (err) {
 			dev_err(dev, "cannot add irqchip\n");
 			return err;
 		}
 		gpiochip_set_chained_irqchip(gpio_chip, irq_chip,
 					     priv->irq_parent, NULL);
+
 		if (devm_request_irq(dev, irq->start, gpio_ts7820_irq_handler,
 				     IRQF_SHARED, name, priv)) {
 			dev_err(dev, "failed to request IRQ\n");
