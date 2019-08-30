@@ -145,6 +145,12 @@
 
 		/* <ranges> is set in the driver at runtime */
 
+		fpga_pll0: fpga_pll0 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <125000000>;
+		};
+
 		fpgarng@24 {
 			compatible = "technologic,ts7840-rng";
 			reg = <0x24 4>;
@@ -358,6 +364,32 @@
 			reg-io-width = <1>;
 			nxp,external-clock-frequency = <16000000>;
 			status = "okay";
+		};
+
+		opencores_spi0: opencores_spi@400 {
+			compatible = "opencores,spi-oc";
+			reg = <0x400 32>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <11 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&fpga_pll0>;
+			clock-names ="spi-oc-clk";
+			opencores-spi,idx = <0>;
+			opencores-spi,num-chipselects = <1>;
+
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			status = "okay";
+
+			spifram: spi@0 {
+				compatible = "atmel,at25", "cypress,fm25l16b";
+				reg = <0>;
+				spi-max-frequency = <20000>;
+				size = <0x800>;
+				address-width = <16>;
+				pagesize = <64>;
+				status = "okay";
+			};
 		};
 	};
 };
