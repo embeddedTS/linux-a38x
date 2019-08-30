@@ -101,7 +101,7 @@
 
 		blue-led {
 			label = "blue-led";
-			gpios = <&fpga_bank0 17 GPIO_ACTIVE_HIGH>;
+			gpios = <&fpga_bank0 28 GPIO_ACTIVE_HIGH>;
 			default-state = "off";
 		};
 
