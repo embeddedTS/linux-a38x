@@ -70,15 +70,29 @@
 		#size-cells = <0>;
 	};
 
-	i2c3: sfp-i2c {
+	i2c3: sfp1-i2c {
 		compatible = "i2c-gpio";
 		status = "okay";
-		gpios = <&fpga_bank0 21 0>, /* sda */
-			<&fpga_bank0 22 0>; /* scl */
+		gpios = <&fpga_bank1 10 0>, /* sda */
+			<&fpga_bank1 11 0>; /* scl */
 		#address-cells = <1>;
 		#size-cells = <0>;
 
 		sfp1: at24c04@50 {
+			compatible = "atmel,24c02";
+			reg = <0x50>;
+		};
+	};
+
+	i2c4: sfp2-i2c {
+		compatible = "i2c-gpio";
+		status = "okay";
+		gpios = <&fpga_bank1 14 0>, /* sda */
+			<&fpga_bank1 15 0>; /* scl */
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		sfp2: at24c04@50 {
 			compatible = "atmel,24c02";
 			reg = <0x50>;
 		};
