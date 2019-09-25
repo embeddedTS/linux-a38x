@@ -559,12 +559,6 @@
 			       "mpp57", "mpp58", "mpp59";
 		marvell,function = "sd0";
 	};
-
-	wifi_gpio_pins: wifi-gpio-pins {
-		marvell,pins = "mpp18"; /* WIFI_IRQ */
-		marvell,function = "gpio";
-		bias-pull-up;
-	};
 };
 
 &sdhci {
