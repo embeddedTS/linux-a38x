@@ -55,6 +55,10 @@
 
 		gpio2 = &fpga_bank0;
 		gpio3 = &fpga_bank1;
+		gpio4 = &fpga_bank2;
+
+		spi0 = &spi0;
+		spi3 = &opencores_spi0;
 	};
 
 	chosen {
@@ -64,8 +68,8 @@
 	i2c2: mikrobus-i2c {
 		compatible = "i2c-gpio";
 		status = "okay";
-		gpios = <&fpga_bank1 28 0>, /* sda */
-			<&fpga_bank1 29 0>; /* scl */
+		gpios = <&fpga_bank2 14 0>, /* sda */
+			<&fpga_bank2 13 0>; /* scl */
 		#address-cells = <1>;
 		#size-cells = <0>;
 	};
@@ -98,36 +102,72 @@
 		};
 	};
 
+	i2c5: poe-i2c {
+		compatible = "i2c-gpio";
+		status = "okay";
+		gpios = <&fpga_bank1 8 0>, /* sda */
+			<&fpga_bank1 7 0>; /* scl */
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	i2c6: aux-i2c {
+		compatible = "i2c-gpio";
+		status = "okay";
+		gpios = <&fpga_bank1 25 0>, /* sda */
+			<&fpga_bank1 26 0>; /* scl */
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
 	leds {
 		compatible = "gpio-leds";
 
-		red-led {
-			label = "red-led";
-			gpios = <&fpga_bank0 27 GPIO_ACTIVE_LOW>;
-			default-state = "off";
-		};
-
-		green-led {
-			label = "green-led";
-			gpios = <&fpga_bank0 26 GPIO_ACTIVE_LOW>;
+		right-green-led {
+			label = "right-green-led";
+			gpios = <&fpga_bank0 19 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "heartbeat";
 		};
 
-		blue-led {
-			label = "blue-led";
-			gpios = <&fpga_bank0 28 GPIO_ACTIVE_HIGH>;
+		right-red-led {
+			label = "right-red-led";
+			gpios = <&fpga_bank0 20 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		middle-green-led {
+			label = "middle-green-led";
+			gpios = <&fpga_bank0 21 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "off";
+		};
+
+		middle-yellow-led {
+			label = "middle-yellow-led";
+			gpios = <&fpga_bank0 22 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		left-green-led {
+			label = "left-green-led";
+			gpios = <&fpga_bank0 23 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "off";
+		};
+
+		left-yellow-led {
+			label = "left-yellow-led";
+			gpios = <&fpga_bank0 24 GPIO_ACTIVE_LOW>;
 			default-state = "off";
 		};
 
 		phy_0_led {
 			label = "phy-0-led";
-			gpios = <&fpga_bank1 30 GPIO_ACTIVE_LOW>;
+			gpios = <&fpga_bank0 26 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "f1072004.mdio-mii:00:1Gbps";
 		};
 
 		phy_1_led {
 			label = "phy-1-led";
-			gpios = <&fpga_bank1 31 GPIO_ACTIVE_LOW>;
+			gpios = <&fpga_bank2 20 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "f1072004.mdio-mii:01:1Gbps";
 		};
 	};
@@ -156,22 +196,73 @@
 		compatible = "technologic,ts78xx-mfd";
 		#address-cells = <1>;
 		#size-cells = <1>;
+		status = "okay";
 
 		/* <ranges> is set in the driver at runtime */
 
-		fpga_pll0: fpga_pll0 {
+		fpga_pll0c1: fpga_pll0c1 {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
-			clock-frequency = <125000000>;
+			clock-frequency = <50000000>;
 		};
 
-		fpgarng@24 {
+		fpgarng@a4 {
 			compatible = "technologic,ts7840-rng";
-			reg = <0x24 4>;
+			reg = <0xa4 4>;
 			status = "okay";
 		};
 
-		fpga_bank0: ts7820-gpio@40 {
+		fpga_bank0: ts7820-gpio@24 {
+			compatible = "technologic,ts7820-gpio";
+
+			/* INT A IRQ */
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
+
+			interrupt-controller;
+			#interrupt-cells = <2>;
+
+			gpio-controller;
+			#gpio-cells = <2>;
+			reg = <0x24 0x1c>;
+			status = "okay";
+
+			gpio-line-names =
+				"uart0_irq",
+				"uart1_irq",
+				"uart2_irq",
+				"uart3_irq",
+				"uart4_irq",
+				"uart5_irq",
+				"uart6_irq",
+				"uart7_irq",
+				"uart8_irq",
+				"",
+				"can_irq",
+				"spi_irq",
+				"",
+				"",
+				"sdio_irq",
+				"sd_busy",
+				"power_fail_3v_pad",
+				"detect_9478_pad",
+				"cpu_access_fpga_flash",
+				"magjack_1_led_padn",
+				"blu_led_padn",
+				"right_grn_led_padn",
+				"right_red_led_padn",
+				"middle_grn_led_padn",
+				"middle_yel_led_padn",
+				"left_grn_led_padn",
+				"left_yel_led_padn",
+				"bt_en_pad",
+				"wifi_en_pad",
+				"prog_silab_clk_padn",
+				"prog_silab_data_pad",
+				"cpu_push_sw_padn";
+		};
+
+		fpga_bank1: ts7820-gpio@40 {
 			compatible = "technologic,ts7820-gpio";
 
 			/* INT A IRQ */
@@ -187,41 +278,41 @@
 			status = "okay";
 
 			gpio-line-names =
-				"uart0_irq",
-				"uart1_irq",
-				"uart2_irq",
-				"uart3_irq",
-				"uart4_irq",
-				"uart5_irq",
-				"uart6_irq",
-				"uart7_irq",
-				"uart8_irq",
-				"gps_pps",
-				"can_irq",
-				"spi_irq",
-				"crc32_done",
-				"i2c_err",
-				"gps_detected",
-				"gps_lock",
-				"pps_lock",
-				"power_fail_3v_pad",
-				"jp1_padn",
-				"jp2_padn",
-				"reserved",
-				"spi_0_mikro_cs2_pad",
-				"ird_network_rdy_pad",
-				"ird_modem_on_pad",
-				"oled_i2c_dat_pad",
-				"oled_i2c_clk_pad",
-				"grn_led_padn",
-				"red_led_padn",
-				"blu_led_pad",
-				"prog_silab_clk_padn",
-				"prog_silab_data_pad",
-				"cpu_push_sw_padn";
+				"DIG_IO_1",
+				"DIG_IO_2",
+				"DIG_IO_3",
+				"en_hs_sw_pad",
+				"mikro_pwm_pad",
+				"dio_fault_3v_padn",
+				"en_poe_padn",
+				"i2c_poe_clk_pad",
+				"i2c_poe_dat",
+				"spi_0_fpga_cs3_pad",
+				"cage1_sda_pad",
+				"cage1_scl_pad",
+				"cage1_present_padn",
+				"cage2_present_padn",
+				"cage2_sda_pad",
+				"cage2_scl_pad",
+				"en_nimbel_4v_pad",
+				"en_nimbel_3v3_pad",
+				"en_emmc_3v3_pad",
+				"en_modem_5v_pad",
+				"en_usb_5v_pad",
+				"disable_nim_usb_pad",
+				"mini_pcie_reset_padn",
+				"ssd_present_padn",
+				"en_xbee_usb_padn",
+				"aux_i2c_dat_pad",
+				"aux_i2c_clk_pad",
+				"",
+				"",
+				"",
+				"",
+				"";
 		};
 
-		fpga_bank1: ts7820-gpio@5c {
+		fpga_bank2: ts7820-gpio@5c {
 			compatible = "technologic,ts7820-gpio";
 
 			/* INT A IRQ */
@@ -237,44 +328,44 @@
 			status = "okay";
 
 			gpio-line-names =
-				"en_ls_out_1_pad",
-				"en_ls_out_2_pad",
-				"en_ls_out_3_pad",
-				"en_hs_sw_pad",
-				"mikro_pwm_pad",
-				"reserved",
-				"en_poe_padn",
-				"i2c_poe_clk_pad",
-				"i2c_poe_dat_in_pad",
-				"i2c_poe_dat_out_pad",
-				"cage1_sda_pad",
-				"cage1_scl_pad",
-				"cage1_present_padn",
-				"cage2_present_padn",
-				"cage2_sda_pad",
-				"cage2_scl_pad",
-				"en_nimbel_4v_pad",
-				"en_nimbel_3v3_pad",
-				"en_emmc_3v3_pad",
-				"en_modem_5v_pad",
-				"en_usb_5v_pad",
-				"en_nim_usb_padn",
-				"mini_pcie_reset_padn",
-				"ssd_present_padn",
-				"en_xbee_usb_padn",
+				"ird_network_rdy_pad",
+				"ird_modem_on_pad",
+				"eth_100_act_padn",
+				"eth_100_speed_padn",
+				"ssd_act_padn",
+				"mini_sr_latch_pad",
+				"",
+				"",
+				"",
+				"",
 				"mikro_int_pad",
 				"mikro_reset_padn",
 				"mikro_an_3v_pad",
-				"aux_i2c_dat_pad",
-				"aux_i2c_clk_pad",
-				"phy_0_led_pad",
-				"phy_1_led_pad";
+				"mikro_i2c_clk_pad",
+				"mikro_i2c_dat_pad",
+				"alt_mikro_pwm_pad",
+				"mikro_an_pwm_pad",
+				"comp_pad",
+				"mikro_180_pad",
+				"en_mini_5v_pad",
+				"magjack_0_led_padn",
+				"hd10_2_pad",
+				"hd10_4_pad",
+				"hd10_5_pad",
+				"hd10_6_pad",
+				"hd10_8_pad",
+				"jp1_padn",
+				"jp2_padn",
+				"",
+				"",
+				"",
+				"";
 		};
 
 		/* COM1 RS-232 */
 		fpga_uart0: fpga-uart0 {
 			compatible = "ns16550a";
-			reg = <0x80 8>;
+			reg = <0x100 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <0 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -285,7 +376,7 @@
 		/* COM2 RS-232 */
 		fpga_uart1: fpga-uart1 {
 			compatible = "ns16550a";
-			reg = <0x88 8>;
+			reg = <0x108 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <1 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -296,7 +387,7 @@
 		/* GPS (RX only) */
 		fpga_uart2: fpga-uart2 {
 			compatible = "ns16550a";
-			reg = <0x90 8>;
+			reg = <0x110 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <2 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -307,7 +398,7 @@
 		/* Nimbelink */
 		fpga_uart3: fpga-uart3 {
 			compatible = "ns16550a";
-			reg = <0x98 8>;
+			reg = <0x118 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <3 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -318,7 +409,7 @@
 		/* Iridium Modem */
 		fpga_uart4: fpga-uart4 {
 			compatible = "ns16550a";
-			reg = <0xa0 8>;
+			reg = <0x120 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <4 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -329,7 +420,7 @@
 		/* DSL Modem */
 		fpga_uart5: fpga-uart5 {
 			compatible = "ns16550a";
-			reg = <0xa8 8>;
+			reg = <0x128 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <5 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -340,7 +431,7 @@
 		/* Mikrobus UART */
 		fpga_uart6: fpga-uart6 {
 			compatible = "ns16550a";
-			reg = <0xb0 8>;
+			reg = <0x130 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <6 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -351,7 +442,7 @@
 		/* RS-485 port */
 		fpga_uart7: fpga-uart7 {
 			compatible = "ns16550a";
-			reg = <0xb8 8>;
+			reg = <0x138 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <7 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -362,7 +453,7 @@
 		/* XBEE */
 		fpga_uart8: fpga-uart8 {
 			compatible = "ns16550a";
-			reg = <0xc0 8>;
+			reg = <0x140 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -385,7 +476,7 @@
 			reg = <0x400 32>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <11 IRQ_TYPE_LEVEL_HIGH>;
-			clocks = <&fpga_pll0>;
+			clocks = <&fpga_pll0c1>;
 			clock-names ="spi-oc-clk";
 			opencores-spi,idx = <0>;
 			opencores-spi,num-chipselects = <1>;
@@ -395,7 +486,7 @@
 
 			status = "okay";
 
-			spifram: spi@0 {
+			spifram: fram@0 {
 				compatible = "atmel,at25", "cypress,fm25l16b";
 				reg = <0>;
 				spi-max-frequency = <20000>;
@@ -404,6 +495,16 @@
 				pagesize = <64>;
 				status = "okay";
 			};
+		};
+
+		ts_mmc: ts_mmc@800 {
+			compatible = "ts,tssdcore2";
+			reg = <0x800 32>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <14 IRQ_TYPE_LEVEL_HIGH>;
+			busy-gpios = <&fpga_bank0 15 0>;
+			debug-gpios = <&fpga_bank1 12 0>;
+			status = "disabled";
 		};
 	};
 };
@@ -566,7 +667,29 @@
 	no-1-8-v;
 	pinctrl-0 = <&sdhci_pins0>;
 	pinctrl-names = "default";
+	status = "disabled";
+};
+
+&spi0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi0_pins>;
 	status = "okay";
+	num-cs = <2>;
+	cs-gpios = <0>, <&fpga_bank0 21 0>;
+
+	/* CN99 flash */
+	offboardspi1: offboardspi@1 {
+		compatible = "spidev";
+		reg = <0>;
+		spi-max-frequency = <1000000>;
+	};
+
+	/* Mikrobus Header */
+	offboardspi2: offboardspi@2 {
+		compatible = "spidev";
+		reg = <1>;
+		spi-max-frequency = <20000000>;
+	};
 };
 
 &uart0 {
