@@ -184,7 +184,7 @@ static irqreturn_t gpio_ts7820_irq_handler(int irq, void *dev_id)
 	dev_dbg(priv->dev, "raw status: 0x%lX\n", status);
 	dev_dbg(priv->dev, "raw irqen: 0x%lX\n", irqen);
 
-	return irqs_handled ? IRQ_HANDLED : IRQ_NONE;
+	return IRQ_HANDLED;
 }
 
 static int ts7820_gpio_probe(struct platform_device *pdev)
