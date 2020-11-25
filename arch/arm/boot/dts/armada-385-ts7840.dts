@@ -667,7 +667,7 @@
 	no-1-8-v;
 	pinctrl-0 = <&sdhci_pins0>;
 	pinctrl-names = "default";
-	status = "disabled";
+	status = "okay";
 };
 
 &spi0 {
