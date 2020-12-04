@@ -384,7 +384,7 @@
 			status = "okay";
 		};
 
-		/* GPS (RX only) */
+		/* GPS */
 		fpga_uart2: fpga-uart2 {
 			compatible = "ns16550a";
 			reg = <0x110 8>;
