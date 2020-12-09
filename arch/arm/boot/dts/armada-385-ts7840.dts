@@ -246,7 +246,7 @@
 				"sd_busy",
 				"power_fail_3v_pad",
 				"detect_9478_pad",
-				"cpu_access_fpga_flash",
+				"",
 				"magjack_1_led_padn",
 				"blu_led_padn",
 				"right_grn_led_padn",
