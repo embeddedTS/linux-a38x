@@ -72,26 +72,26 @@
 	i2c2: mikrobus-i2c {
 		compatible = "i2c-gpio";
 		status = "okay";
-		gpios = <&fpga_bank2 14 0>, /* sda */
-			<&fpga_bank2 13 0>; /* scl */
+		gpios = <&fpga_bank2 14 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>, /* sda */
+			<&fpga_bank2 13 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>; /* scl */
 		#address-cells = <1>;
 		#size-cells = <0>;
 	};
 
-	i2c3: sfp0-i2c {
+	sfp0_i2c: sfp0-i2c {
 		compatible = "i2c-gpio";
 		status = "okay";
-		gpios = <&fpga_bank1 10 0>, /* sda */
-			<&fpga_bank1 11 0>; /* scl */
+		gpios = <&fpga_bank1 14 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>, /* sda */
+			<&fpga_bank1 15 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>; /* scl */
 		#address-cells = <1>;
 		#size-cells = <0>;
 	};
 
-	i2c4: sfp1-i2c {
+	sfp1_i2c: sfp1-i2c {
 		compatible = "i2c-gpio";
 		status = "okay";
-		gpios = <&fpga_bank1 14 0>, /* sda */
-			<&fpga_bank1 15 0>; /* scl */
+		gpios = <&fpga_bank1 10 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>, /* sda */
+			<&fpga_bank1 11 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>; /* scl */
 		#address-cells = <1>;
 		#size-cells = <0>;
 	};
@@ -99,8 +99,8 @@
 	i2c5: poe-i2c {
 		compatible = "i2c-gpio";
 		status = "okay";
-		gpios = <&fpga_bank1 8 0>, /* sda */
-			<&fpga_bank1 7 0>; /* scl */
+		gpios = <&fpga_bank1 8 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>, /* sda */
+			<&fpga_bank1 7 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>; /* scl */
 		#address-cells = <1>;
 		#size-cells = <0>;
 	};
@@ -108,8 +108,8 @@
 	i2c6: aux-i2c {
 		compatible = "i2c-gpio";
 		status = "okay";
-		gpios = <&fpga_bank1 25 0>, /* sda */
-			<&fpga_bank1 26 0>; /* scl */
+		gpios = <&fpga_bank1 25 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>, /* sda */
+			<&fpga_bank1 26 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>; /* scl */
 		#address-cells = <1>;
 		#size-cells = <0>;
 	};
@@ -499,13 +499,13 @@
 
 	sfp0: sfp {
 		compatible = "sff,sfp";
-		i2c-bus = <&i2c3>;
+		i2c-bus = <&sfp0_i2c>;
 		status = "okay";
 	};
 
 	sfp1: sfp {
 		compatible = "sff,sfp";
-		i2c-bus = <&i2c4>;
+		i2c-bus = <&sfp1_i2c>;
 		status = "okay";
 	};
 };
@@ -530,7 +530,7 @@
 	phy = <&phy0>;
 	phy-mode = "rgmii-id";
 	buffer-manager = <&bm>;
-	sfp = <&sfp0>;
+	/*sfp = <&sfp0>;*/
 	bm,pool-long = <0>;
 	bm,pool-short = <1>;
 };
@@ -542,7 +542,7 @@
 	status = "okay";
 	phy = <&phy1>;
 	phy-mode = "rgmii-id";
-	sfp = <&sfp0>;
+	/*sfp = <&sfp1>;*/
 	bm,pool-long = <2>;
 	bm,pool-short = <1>;
 	buffer-manager = <&bm>;
