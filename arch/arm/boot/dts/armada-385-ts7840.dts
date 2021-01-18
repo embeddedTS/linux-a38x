@@ -681,20 +681,13 @@
 	pinctrl-0 = <&spi0_pins>;
 	status = "okay";
 	num-cs = <3>;
-	cs-gpios = <0>, <&fpga_bank0 21 0>, <&fpga_bank1 9 0>;
+	cs-gpios = <0>, <&fpga_bank1 9 0>;
 
 	/* CN99 flash */
 	offboardspi1: offboardspi@0 {
 		compatible = "spidev";
 		reg = <0>;
 		spi-max-frequency = <1000000>;
-	};
-
-	/* Mikrobus Header */
-	offboardspi2: offboardspi@1 {
-		compatible = "spidev";
-		reg = <1>;
-		spi-max-frequency = <20000000>;
 	};
 
 	/* Onboard FPGA Flash */
