@@ -1,0 +1,732 @@
+/*
+ * Device Tree file for Technologic Systems TS-7820
+ *
+ *  Copyright (C) 2017 Technologic Systems
+ *
+ * Mark Featherston <mark@embeddedarm.com>
+ *
+ * This file is dual-licensed: you can use it either under the terms
+ * of the GPL or the X11 license, at your option. Note that this dual
+ * licensing only applies to this file, and not this project as a
+ * whole.
+ *
+ *  a) This file is licensed under the terms of the GNU General Public
+ *     License version 2.  This program is licensed "as is" without
+ *     any warranty of any kind, whether express or implied.
+ *
+ * Or, alternatively,
+ *
+ *  b) Permission is hereby granted, free of charge, to any person
+ *     obtaining a copy of this software and associated documentation
+ *     files (the "Software"), to deal in the Software without
+ *     restriction, including without limitation the rights to use,
+ *     copy, modify, merge, publish, distribute, sublicense, and/or
+ *     sell copies of the Software, and to permit persons to whom the
+ *     Software is furnished to do so, subject to the following
+ *     conditions:
+ *
+ *     The above copyright notice and this permission notice shall be
+ *     included in all copies or substantial portions of the Software.
+ *
+ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ *     OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/dts-v1/;
+#include "armada-385.dtsi"
+
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "Technologic Systems TS-7840";
+	compatible = "technologic,a385-ts7840", "marvell,armada385", "marvell,armada380";
+
+	aliases {
+		ethernet1 = &eth0;
+		ethernet2 = &eth1;
+		ethernet3 = &eth2;
+
+		gpio2 = &fpga_bank0;
+		gpio3 = &fpga_bank1;
+		gpio4 = &fpga_bank2;
+
+		spi0 = &spi0;
+		spi3 = &opencores_spi0;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x00000000 0x80000000>; /* 2GB */
+	};
+
+	i2c2: mikrobus-i2c {
+		compatible = "i2c-gpio";
+		status = "okay";
+		gpios = <&fpga_bank2 14 0>, /* sda */
+			<&fpga_bank2 13 0>; /* scl */
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	i2c3: sfp0-i2c {
+		compatible = "i2c-gpio";
+		status = "okay";
+		gpios = <&fpga_bank1 10 0>, /* sda */
+			<&fpga_bank1 11 0>; /* scl */
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	i2c4: sfp1-i2c {
+		compatible = "i2c-gpio";
+		status = "okay";
+		gpios = <&fpga_bank1 14 0>, /* sda */
+			<&fpga_bank1 15 0>; /* scl */
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	i2c5: poe-i2c {
+		compatible = "i2c-gpio";
+		status = "okay";
+		gpios = <&fpga_bank1 8 0>, /* sda */
+			<&fpga_bank1 7 0>; /* scl */
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	i2c6: aux-i2c {
+		compatible = "i2c-gpio";
+		status = "okay";
+		gpios = <&fpga_bank1 25 0>, /* sda */
+			<&fpga_bank1 26 0>; /* scl */
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		right-green-led {
+			label = "right-green-led";
+			gpios = <&fpga_bank0 19 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "heartbeat";
+		};
+
+		right-red-led {
+			label = "right-red-led";
+			gpios = <&fpga_bank0 20 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		middle-green-led {
+			label = "middle-green-led";
+			gpios = <&fpga_bank0 21 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "off";
+		};
+
+		middle-yellow-led {
+			label = "middle-yellow-led";
+			gpios = <&fpga_bank0 22 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		left-green-led {
+			label = "left-green-led";
+			gpios = <&fpga_bank0 23 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "off";
+		};
+
+		left-yellow-led {
+			label = "left-yellow-led";
+			gpios = <&fpga_bank0 24 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		phy_0_led {
+			label = "phy-0-led";
+			gpios = <&fpga_bank0 26 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "f1072004.mdio-mii:00:1Gbps";
+		};
+
+		phy_1_led {
+			label = "phy-1-led";
+			gpios = <&fpga_bank2 20 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "f1072004.mdio-mii:01:1Gbps";
+		};
+	};
+
+	soc {
+		ranges = <MBUS_ID(0xf0, 0x01) 0 0xf1000000 0x100000
+			  MBUS_ID(0x01, 0x1d) 0 0xfff00000 0x100000
+			  MBUS_ID(0x09, 0x19) 0 0xf1100000 0x10000
+			  MBUS_ID(0x09, 0x15) 0 0xf1110000 0x10000
+			  MBUS_ID(0x0c, 0x04) 0 0xf1200000 0x100000>;
+
+		internal-regs {
+			/* We use M41T100 instead, not SOC RTC */
+			rtc@a3800 {
+				status = "disabled";
+			};
+		};
+	};
+
+	tsfpga_pcie: tsfpga-pcie {
+		compatible = "technologic,ts78xx-mfd";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		status = "okay";
+
+		/* <ranges> is set in the driver at runtime */
+
+		fpga_pll0c1: fpga_pll0c1 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <50000000>;
+		};
+
+		fpgarng@a4 {
+			compatible = "technologic,ts7840-rng";
+			reg = <0xa4 4>;
+			status = "okay";
+		};
+
+		fpga_bank0: ts7820-gpio@24 {
+			compatible = "technologic,ts7820-gpio";
+
+			/* INT A IRQ */
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
+
+			interrupt-controller;
+			#interrupt-cells = <2>;
+
+			gpio-controller;
+			#gpio-cells = <2>;
+			reg = <0x24 0x1c>;
+			status = "okay";
+
+			gpio-line-names =
+				"uart0_irq",
+				"uart1_irq",
+				"uart2_irq",
+				"uart3_irq",
+				"uart4_irq",
+				"uart5_irq",
+				"uart6_irq",
+				"uart7_irq",
+				"uart8_irq",
+				"",
+				"can_irq",
+				"spi_irq",
+				"",
+				"",
+				"sdio_irq",
+				"sd_busy",
+				"power_fail_3v_pad",
+				"detect_9478_pad",
+				"",
+				"magjack_1_led_padn",
+				"blu_led_padn",
+				"right_grn_led_padn",
+				"right_red_led_padn",
+				"middle_grn_led_padn",
+				"middle_yel_led_padn",
+				"left_grn_led_padn",
+				"left_yel_led_padn",
+				"bt_en_pad",
+				"wifi_en_pad",
+				"prog_silab_clk_padn",
+				"prog_silab_data_pad",
+				"cpu_push_sw_padn";
+		};
+
+		fpga_bank1: ts7820-gpio@40 {
+			compatible = "technologic,ts7820-gpio";
+
+			/* INT A IRQ */
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
+
+			interrupt-controller;
+			#interrupt-cells = <2>;
+
+			gpio-controller;
+			#gpio-cells = <2>;
+			reg = <0x40 0x1c>;
+			status = "okay";
+
+			gpio-line-names =
+				"DIG_IO_1",
+				"DIG_IO_2",
+				"DIG_IO_3",
+				"en_hs_sw_pad",
+				"mikro_pwm_pad",
+				"dio_fault_3v_padn",
+				"en_poe_padn",
+				"i2c_poe_clk_pad",
+				"i2c_poe_dat",
+				"spi_0_fpga_cs3_pad",
+				"cage1_sda_pad",
+				"cage1_scl_pad",
+				"",
+				"",
+				"cage2_sda_pad",
+				"cage2_scl_pad",
+				"en_nimbel_4v_pad",
+				"en_nimbel_3v3_pad",
+				"en_emmc_3v3_pad",
+				"en_modem_5v_pad",
+				"en_usb_5v_pad",
+				"disable_nim_usb_pad",
+				"mini_pcie_reset_padn",
+				"ssd_present_padn",
+				"en_xbee_usb_padn",
+				"aux_i2c_dat_pad",
+				"aux_i2c_clk_pad",
+				"",
+				"",
+				"",
+				"",
+				"";
+		};
+
+		fpga_bank2: ts7820-gpio@5c {
+			compatible = "technologic,ts7820-gpio";
+
+			/* INT A IRQ */
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
+
+			interrupt-controller;
+			#interrupt-cells = <2>;
+
+			gpio-controller;
+			#gpio-cells = <2>;
+			reg = <0x5c 0x1c>;
+			status = "okay";
+
+			gpio-line-names =
+				"ird_network_rdy_pad",
+				"ird_modem_on_pad",
+				"eth_100_act_padn",
+				"eth_100_speed_padn",
+				"ssd_act_padn",
+				"mini_sr_latch_pad",
+				"",
+				"",
+				"",
+				"",
+				"mikro_int_pad",
+				"mikro_reset_padn",
+				"mikro_an_3v_pad",
+				"mikro_i2c_clk_pad",
+				"mikro_i2c_dat_pad",
+				"alt_mikro_pwm_pad",
+				"mikro_an_pwm_pad",
+				"comp_pad",
+				"mikro_180_pad",
+				"en_mini_5v_pad",
+				"magjack_0_led_padn",
+				"hd10_2_pad",
+				"hd10_4_pad",
+				"hd10_5_pad",
+				"hd10_6_pad",
+				"hd10_8_pad",
+				"jp1_padn",
+				"jp2_padn",
+				"",
+				"",
+				"",
+				"";
+		};
+
+		/* COM1 RS-232 */
+		fpga_uart0: fpga-uart0 {
+			compatible = "ns16550a";
+			reg = <0x100 8>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <0 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+			status = "okay";
+		};
+
+		/* COM2 RS-232 */
+		fpga_uart1: fpga-uart1 {
+			compatible = "ns16550a";
+			reg = <0x108 8>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <1 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+			status = "okay";
+		};
+
+		/* GPS */
+		fpga_uart2: fpga-uart2 {
+			compatible = "ns16550a";
+			reg = <0x110 8>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <2 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+			status = "okay";
+		};
+
+		/* Nimbelink */
+		fpga_uart3: fpga-uart3 {
+			compatible = "ns16550a";
+			reg = <0x118 8>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <3 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+			status = "okay";
+		};
+
+		/* Iridium Modem */
+		fpga_uart4: fpga-uart4 {
+			compatible = "ns16550a";
+			reg = <0x120 8>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <4 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+			status = "okay";
+		};
+
+		/* DSL Modem */
+		fpga_uart5: fpga-uart5 {
+			compatible = "ns16550a";
+			reg = <0x128 8>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <5 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+			status = "okay";
+		};
+
+		/* Mikrobus UART */
+		fpga_uart6: fpga-uart6 {
+			compatible = "ns16550a";
+			reg = <0x130 8>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <6 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+			status = "okay";
+		};
+
+		/* RS-485 port */
+		fpga_uart7: fpga-uart7 {
+			compatible = "ns16550a";
+			reg = <0x138 8>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <7 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+			status = "okay";
+		};
+
+		/* XBEE */
+		fpga_uart8: fpga-uart8 {
+			compatible = "ns16550a";
+			reg = <0x140 8>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+			status = "okay";
+		};
+
+		can@200 {
+			compatible = "nxp,sja1000";
+			reg = <0x200 0x00000100>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <10 IRQ_TYPE_LEVEL_HIGH>;
+			reg-io-width = <1>;
+			nxp,external-clock-frequency = <16000000>;
+			status = "okay";
+		};
+
+		opencores_spi0: spi@400 {
+			compatible = "opencores,spi-oc";
+			reg = <0x400 32>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <11 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&fpga_pll0c1>;
+			clock-names ="spi-oc-clk";
+			opencores-spi,idx = <0>;
+			opencores-spi,num-chipselects = <1>;
+
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			status = "okay";
+
+			spifram: fram@0 {
+				compatible = "atmel,at25", "cypress,fm25l16b";
+				reg = <0>;
+				spi-max-frequency = <20000>;
+				size = <0x800>;
+				address-width = <16>;
+				pagesize = <64>;
+				status = "okay";
+			};
+		};
+
+		ts_mmc: ts_mmc@800 {
+			compatible = "ts,tssdcore2";
+			reg = <0x800 32>;
+			interrupt-parent = <&fpga_bank0>;
+			interrupts = <14 IRQ_TYPE_LEVEL_HIGH>;
+			busy-gpios = <&fpga_bank0 15 0>;
+			debug-gpios = <&fpga_bank1 12 0>;
+			status = "disabled";
+		};
+	};
+
+	sfp0: sfp {
+		compatible = "sff,sfp";
+		i2c-bus = <&i2c3>;
+		status = "okay";
+	};
+
+	sfp1: sfp {
+		compatible = "sff,sfp";
+		i2c-bus = <&i2c4>;
+		status = "okay";
+	};
+};
+
+&ahci0 {
+	status = "okay";
+};
+
+&bm {
+	status = "okay";
+};
+
+&bm_bppi {
+	status = "okay";
+};
+
+/* magjack/sfp port 0 */
+&eth0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ge0_rgmii_pins>;
+	status = "okay";
+	phy = <&phy0>;
+	phy-mode = "rgmii-id";
+	managed = "in-band-status";
+	buffer-manager = <&bm>;
+	sfp = <&sfp0>;
+	bm,pool-long = <0>;
+	bm,pool-short = <1>;
+};
+
+/* magjack/sfgp port 1 */
+&eth1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ge1_rgmii_pins>;
+	status = "okay";
+	phy = <&phy1>;
+	phy-mode = "rgmii-id";
+	managed = "in-band-status";
+	sfp = <&sfp0>;
+	bm,pool-long = <2>;
+	bm,pool-short = <1>;
+	buffer-manager = <&bm>;
+};
+
+/* sgmii port to eth switch */
+&eth2 {
+	status = "okay";
+	phy-mode = "sgmii";
+	bm,pool-long = <3>;
+	bm,pool-short = <1>;
+	buffer-manager = <&bm>;
+
+	fixed-link {
+		speed = <1000>;
+		full-duplex;
+	};
+};
+
+&i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c0_pins>;
+	clock-frequency = <100000>;
+	status = "okay";
+
+	silabs_wdt: silabs-wdt@54 {
+		compatible = "technologic,ts7100-wdt";
+		reg = <0x54>;
+		status = "okay";
+	};
+
+	rtc1: m41t00s@68 {
+		compatible = "m41t00";
+		reg = <0x68>;
+	};
+};
+
+&mdio {
+	pinctrl-names = "default";
+	pinctrl-0 = <&mdio_pins>;
+
+	phy0: ethernet-phy@0 {
+		reg = <0>;
+		/* Configure LED[0] to blink for activity */
+		marvell,reg-init = <3 16 0 0x1aa4>;
+	};
+
+	phy1: ethernet-phy@1 {
+		reg = <1>;
+		/* Configure LED[0] to blink for activity */
+		marvell,reg-init = <3 16 0 0x1aa4>;
+	};
+
+	switch@2 {
+		compatible = "marvell,mv88e6085";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		dsa,member = <0 0>;
+		reg = <2>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			ports@0 {
+				reg = <0>;
+				label = "lan0";
+			};
+
+			ports@1 {
+				reg = <1>;
+				label = "lan1";
+			};
+
+			ports@2 {
+				reg = <2>;
+				label = "lan2";
+			};
+
+			ports@3 {
+				reg = <3>;
+				label = "lan3";
+			};
+
+			ports@4 {
+				reg = <4>;
+				label = "lan4";
+			};
+
+			port@5 {
+				reg = <5>;
+				label = "cpu";
+				ethernet = <&eth2>;
+				fixed-link {
+					speed = <1000>;
+					full-duplex;
+				};
+			};
+		};
+	};
+};
+
+&pciec {
+	status = "okay";
+};
+
+/* Mini PCIe */
+&pcie2 {
+	reset-gpios = <&fpga_bank1 22 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
+
+/* FPGA */
+&pcie3 {
+	status = "okay";
+};
+
+&pinctrl {
+	sdhci_pins0: sdhci-pins0 {
+		marvell,pins = "mpp50", "mpp54", "mpp55",
+			       "mpp57", "mpp58", "mpp59";
+		marvell,function = "sd0";
+	};
+};
+
+&sdhci {
+	bus-width = <4>;
+	no-1-8-v;
+	pinctrl-0 = <&sdhci_pins0>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&spi0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi0_pins>;
+	status = "okay";
+	num-cs = <3>;
+	cs-gpios = <0>, <&fpga_bank0 21 0>, <&fpga_bank1 9 0>;
+
+	/* CN99 flash */
+	offboardspi1: offboardspi@0 {
+		compatible = "spidev";
+		reg = <0>;
+		spi-max-frequency = <1000000>;
+	};
+
+	/* Mikrobus Header */
+	offboardspi2: offboardspi@1 {
+		compatible = "spidev";
+		reg = <1>;
+		spi-max-frequency = <20000000>;
+	};
+
+	/* Onboard FPGA Flash */
+	is25lq016b: flash@2 {
+		compatible = "issi,is25lq016b", "jedec,spi-nor";
+		reg = <2>;
+		spi-max-frequency = <20000000>;
+	};
+};
+
+&uart0 {
+	pinctrl-0 = <&uart0_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+	u-boot,dm-pre-reloc;
+};
+
+/* We use external watchdog */
+&watchdog {
+	status = "disabled";
+};
+
+&usb0 {
+	status = "okay";
+};
+
+&usb3_0 {
+	status = "okay";
+};
+
+&usb3_1 {
+	status = "okay";
+};
