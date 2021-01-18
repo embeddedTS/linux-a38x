@@ -529,7 +529,6 @@
 	status = "okay";
 	phy = <&phy0>;
 	phy-mode = "rgmii-id";
-	managed = "in-band-status";
 	buffer-manager = <&bm>;
 	sfp = <&sfp0>;
 	bm,pool-long = <0>;
@@ -543,7 +542,6 @@
 	status = "okay";
 	phy = <&phy1>;
 	phy-mode = "rgmii-id";
-	managed = "in-band-status";
 	sfp = <&sfp0>;
 	bm,pool-long = <2>;
 	bm,pool-short = <1>;
