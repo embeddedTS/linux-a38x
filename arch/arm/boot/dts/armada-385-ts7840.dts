@@ -651,7 +651,6 @@
 
 /* Mini PCIe */
 &pcie2 {
-	reset-gpios = <&fpga_bank1 22 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
 
