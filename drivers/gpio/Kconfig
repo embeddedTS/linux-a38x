@@ -1339,12 +1339,22 @@ config GPIO_TQMX86
 	help
 	  This driver supports GPIO on the TQMX86 IO controller.
 
+config GPIO_TS7820
+	tristate "Technologic Systems' TS-7820/TS-7840 GPIO Support"
+	select GPIO_GENERIC
+	select GPIOLIB_IRQCHIP
+	depends on MFD_TS78XX
+	default n
+	help
+	  Say yes here to support GPIO on the TS-78XX.
+
 config GPIO_TWL4030
 	tristate "TWL4030, TWL5030, and TPS659x0 GPIOs"
 	depends on TWL4030_CORE
 	help
 	  Say yes here to access the GPIO signals of various multi-function
 	  power management chips from Texas Instruments.
+
 
 config GPIO_TWL6040
 	tristate "TWL6040 GPO"
