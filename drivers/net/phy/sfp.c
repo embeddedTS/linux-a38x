@@ -2356,9 +2356,19 @@ static int sfp_probe(struct platform_device *pdev)
 	sfp->get_state = sfp_gpio_get_state;
 	sfp->set_state = sfp_gpio_set_state;
 
-	/* Modules that have no detect signal are always present */
-	if (!(sfp->gpio[GPIO_MODDEF0]))
+	if (!(sfp->gpio[GPIO_MODDEF0])) {
+		/* If the module does not have a detect GPIO, check the status
+		 * register to test for presence only once on startup */
+		u8 status;
+		err = sfp_read(sfp, true, SFP_STATUS, &status, sizeof(status));
+		if (err != 1) {
+			dev_info(sfp->dev, "module not detected\n");
+			i2c_put_adapter(i2c);
+			return -ENODEV;
+		}
+
 		sfp->get_state = sff_gpio_get_state;
+	}
 
 	device_property_read_u32(&pdev->dev, "maximum-power-milliwatt",
 				 &sfp->max_power_mW);
