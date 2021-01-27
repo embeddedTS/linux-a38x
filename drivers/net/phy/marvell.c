@@ -46,6 +46,7 @@
 #define MII_MARVELL_MISC_TEST_PAGE	0x06
 #define MII_MARVELL_VCT7_PAGE		0x07
 #define MII_MARVELL_WOL_PAGE		0x11
+#define MII_MARVELL_GEN_PAGE		0x12
 
 #define MII_M1011_IEVENT		0x13
 #define MII_M1011_IEVENT_CLEAR		0x0000
@@ -160,10 +161,15 @@
 #define MII_88E3016_DISABLE_SCRAMBLER	0x0200
 #define MII_88E3016_AUTO_MDIX_CROSSOVER	0x0030
 
-#define MII_88E1510_GEN_CTRL_REG_1		0x14
-#define MII_88E1510_GEN_CTRL_REG_1_MODE_MASK	0x7
-#define MII_88E1510_GEN_CTRL_REG_1_MODE_SGMII	0x1	/* SGMII to copper */
-#define MII_88E1510_GEN_CTRL_REG_1_RESET	0x8000	/* Soft reset */
+#define MII_88E1510_GEN_CTRL_REG_1			0x14
+#define MII_88E1510_GEN_CTRL_REG_1_AMD_100		0x40
+#define MII_88E1510_GEN_CTRL_REG_1_MODE_MASK		0x7
+#define MII_88E1510_GEN_CTRL_REG_1_MODE_SGMII		0x1	/* SGMII to copper */
+#define MII_88E1510_GEN_CTRL_REG_1_MODE_RGMII_1000FX	0x2	/* RGMII to copper/1000BASEFX */
+#define MII_88E1510_GEN_CTRL_REG_1_MODE_RGMII_100FX	0x3	/* RGMII to copper/100BASEFX */
+#define MII_88E1510_GEN_CTRL_REG_1_MODE_RGMII_AUTO	0x7	/* RGMII to copper/autoFX */
+#define MII_88E1510_GEN_CTRL_REG_1_MODE_SGMII		0x1	/* SGMII to copper */
+#define MII_88E1510_GEN_CTRL_REG_1_RESET		0x8000	/* Soft reset */
 
 #define MII_VCT5_TX_RX_MDI0_COUPLING	0x10
 #define MII_VCT5_TX_RX_MDI1_COUPLING	0x11
@@ -604,7 +610,7 @@ static inline u32 linkmode_adv_to_fiber_adv_t(unsigned long *advertise)
 static int marvell_config_aneg_fiber(struct phy_device *phydev)
 {
 	int changed = 0;
-	int err;
+	int err, adverr;
 	u16 adv;
 
 	if (phydev->autoneg != AUTONEG_ENABLE)
@@ -613,17 +619,54 @@ static int marvell_config_aneg_fiber(struct phy_device *phydev)
 	/* Only allow advertising what this PHY supports */
 	linkmode_and(phydev->advertising, phydev->advertising,
 		     phydev->supported);
-
 	adv = linkmode_adv_to_fiber_adv_t(phydev->advertising);
 
-	/* Setup fiber advertisement */
-	err = phy_modify_changed(phydev, MII_ADVERTISE,
-				 ADVERTISE_1000XHALF | ADVERTISE_1000XFULL |
-				 ADVERTISE_1000XPAUSE | ADVERTISE_1000XPSE_ASYM,
-				 adv);
+	/* Only suport 100baseFX if we are not advertising gbit */
+	if (linkmode_test_bit(ETHTOOL_LINK_MODE_1000baseT_Full_BIT, phydev->advertising) |
+	    linkmode_test_bit(ETHTOOL_LINK_MODE_1000baseT_Half_BIT, phydev->advertising)) {
+		/* 1000baseFX */
+		adverr = phy_modify_changed(phydev, MII_ADVERTISE,
+					 ADVERTISE_1000XHALF | ADVERTISE_1000XFULL |
+					 ADVERTISE_1000XPAUSE | ADVERTISE_1000XPSE_ASYM,
+					 adv);
+
+		err = marvell_set_page(phydev, MII_MARVELL_GEN_PAGE);
+		if (err < 0)
+			return err;
+		/* In reg 20, write MODE[2:0] = 0x7 (RGMII to copper/autofx) */
+		err = phy_modify(phydev, MII_88E1510_GEN_CTRL_REG_1,
+				 MII_88E1510_GEN_CTRL_REG_1_MODE_MASK,
+				 MII_88E1510_GEN_CTRL_REG_1_MODE_RGMII_AUTO);
+		if (err < 0)
+			return err;
+
+	} else {
+		/* 100baseFX */
+		adverr = phy_modify_changed(phydev, MII_ADVERTISE,
+					 ADVERTISE_100HALF | ADVERTISE_100FULL,
+					 adv);
+
+		err = marvell_set_page(phydev, MII_MARVELL_GEN_PAGE);
+		if (err < 0)
+			return err;
+		/* In reg 20, write MODE[2:0] = 0x3 (RGMII to copper/100basefx) */
+		err = phy_modify(phydev, MII_88E1510_GEN_CTRL_REG_1,
+				 MII_88E1510_GEN_CTRL_REG_1_MODE_MASK,
+				 MII_88E1510_GEN_CTRL_REG_1_MODE_RGMII_100FX);
+		if (err < 0)
+			return err;
+	}
+
+	/* PHY reset is necessary after changing MODE[2:0] */
+	err = phy_modify(phydev, MII_88E1510_GEN_CTRL_REG_1, 0,
+			 MII_88E1510_GEN_CTRL_REG_1_RESET);
 	if (err < 0)
 		return err;
-	if (err > 0)
+
+	err = marvell_set_page(phydev, MII_MARVELL_FIBER_PAGE);
+	if (err < 0)
+		return err;
+	if (adverr > 0)
 		changed = 1;
 
 	return genphy_check_and_restart_aneg(phydev, changed);
@@ -1017,7 +1060,7 @@ static int m88e1510_config_init(struct phy_device *phydev)
 	/* SGMII-to-Copper mode initialization */
 	if (phydev->interface == PHY_INTERFACE_MODE_SGMII) {
 		/* Select page 18 */
-		err = marvell_set_page(phydev, 18);
+		err = marvell_set_page(phydev, MII_MARVELL_GEN_PAGE);
 		if (err < 0)
 			return err;
 
@@ -1342,6 +1385,15 @@ static int m88e6390_config_aneg(struct phy_device *phydev)
  */
 static void fiber_lpa_mod_linkmode_lpa_t(unsigned long *advertising, u32 lpa)
 {
+	linkmode_mod_bit(ETHTOOL_LINK_MODE_100baseT_Half_BIT,
+			 advertising, ETHTOOL_LINK_MODE_FIBRE_BIT);
+
+	linkmode_mod_bit(ETHTOOL_LINK_MODE_100baseT_Half_BIT,
+			 advertising, lpa & LPA_100HALF);
+
+	linkmode_mod_bit(ETHTOOL_LINK_MODE_100baseT_Full_BIT,
+			 advertising, lpa & LPA_100FULL);
+
 	linkmode_mod_bit(ETHTOOL_LINK_MODE_1000baseT_Half_BIT,
 			 advertising, lpa & LPA_1000XHALF);
 
@@ -1390,7 +1442,6 @@ static int marvell_read_status_page_an(struct phy_device *phydev,
 		if (lpa < 0)
 			return lpa;
 
-		/* The fiber link is only 1000M capable */
 		fiber_lpa_mod_linkmode_lpa_t(phydev->lp_advertising, lpa);
 
 		if (phydev->duplex == DUPLEX_FULL) {
