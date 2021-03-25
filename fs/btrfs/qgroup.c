@@ -3224,6 +3224,12 @@ out:
 	return ret;
 }
 
+static bool rescan_should_stop(struct btrfs_fs_info *fs_info)
+{
+	return btrfs_fs_closing(fs_info) ||
+		test_bit(BTRFS_FS_STATE_REMOUNTING, &fs_info->fs_state);
+}
+
 static void btrfs_qgroup_rescan_worker(struct btrfs_work *work)
 {
 	struct btrfs_fs_info *fs_info = container_of(work, struct btrfs_fs_info,
@@ -3232,6 +3238,7 @@ static void btrfs_qgroup_rescan_worker(struct btrfs_work *work)
 	struct btrfs_trans_handle *trans = NULL;
 	int err = -ENOMEM;
 	int ret = 0;
+	bool stopped = false;
 
 	path = btrfs_alloc_path();
 	if (!path)
@@ -3244,7 +3251,7 @@ static void btrfs_qgroup_rescan_worker(struct btrfs_work *work)
 	path->skip_locking = 1;
 
 	err = 0;
-	while (!err && !btrfs_fs_closing(fs_info)) {
+	while (!err && !(stopped = rescan_should_stop(fs_info))) {
 		trans = btrfs_start_transaction(fs_info->fs_root, 0);
 		if (IS_ERR(trans)) {
 			err = PTR_ERR(trans);
@@ -3287,7 +3294,7 @@ out:
 	}
 
 	mutex_lock(&fs_info->qgroup_rescan_lock);
-	if (!btrfs_fs_closing(fs_info))
+	if (!stopped)
 		fs_info->qgroup_flags &= ~BTRFS_QGROUP_STATUS_FLAG_RESCAN;
 	if (trans) {
 		ret = update_qgroup_status_item(trans);
@@ -3306,7 +3313,7 @@ out:
 
 	btrfs_end_transaction(trans);
 
-	if (btrfs_fs_closing(fs_info)) {
+	if (stopped) {
 		btrfs_info(fs_info, "qgroup scan paused");
 	} else if (err >= 0) {
 		btrfs_info(fs_info, "qgroup scan completed%s",
@@ -3868,8 +3875,8 @@ static int sub_root_meta_rsv(struct btrfs_root *root, int num_bytes,
 	return num_bytes;
 }
 
-static int qgroup_reserve_meta(struct btrfs_root *root, int num_bytes,
-				enum btrfs_qgroup_rsv_type type, bool enforce)
+int btrfs_qgroup_reserve_meta(struct btrfs_root *root, int num_bytes,
+			      enum btrfs_qgroup_rsv_type type, bool enforce)
 {
 	struct btrfs_fs_info *fs_info = root->fs_info;
 	int ret;
@@ -3900,14 +3907,14 @@ int __btrfs_qgroup_reserve_meta(struct btrfs_root *root, int num_bytes,
 {
 	int ret;
 
-	ret = qgroup_reserve_meta(root, num_bytes, type, enforce);
+	ret = btrfs_qgroup_reserve_meta(root, num_bytes, type, enforce);
 	if (ret <= 0 && ret != -EDQUOT)
 		return ret;
 
 	ret = try_flush_qgroup(root);
 	if (ret < 0)
 		return ret;
-	return qgroup_reserve_meta(root, num_bytes, type, enforce);
+	return btrfs_qgroup_reserve_meta(root, num_bytes, type, enforce);
 }
 
 void btrfs_qgroup_free_meta_all_pertrans(struct btrfs_root *root)
