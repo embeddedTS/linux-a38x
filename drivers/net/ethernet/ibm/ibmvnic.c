@@ -212,12 +212,11 @@ static int alloc_long_term_buff(struct ibmvnic_adapter *adapter,
 	mutex_lock(&adapter->fw_lock);
 	adapter->fw_done_rc = 0;
 	reinit_completion(&adapter->fw_done);
-	rc = send_request_map(adapter, ltb->addr,
-			      ltb->size, ltb->map_id);
+
+	rc = send_request_map(adapter, ltb->addr, ltb->size, ltb->map_id);
 	if (rc) {
-		dma_free_coherent(dev, ltb->size, ltb->buff, ltb->addr);
-		mutex_unlock(&adapter->fw_lock);
-		return rc;
+		dev_err(dev, "send_request_map failed, rc = %d\n", rc);
+		goto out;
 	}
 
 	rc = ibmvnic_wait_for_completion(adapter, &adapter->fw_done, 10000);
@@ -225,20 +224,23 @@ static int alloc_long_term_buff(struct ibmvnic_adapter *adapter,
 		dev_err(dev,
 			"Long term map request aborted or timed out,rc = %d\n",
 			rc);
-		dma_free_coherent(dev, ltb->size, ltb->buff, ltb->addr);
-		mutex_unlock(&adapter->fw_lock);
-		return rc;
+		goto out;
 	}
 
 	if (adapter->fw_done_rc) {
 		dev_err(dev, "Couldn't map long term buffer,rc = %d\n",
 			adapter->fw_done_rc);
+		rc = -1;
+		goto out;
+	}
+	rc = 0;
+out:
+	if (rc) {
 		dma_free_coherent(dev, ltb->size, ltb->buff, ltb->addr);
-		mutex_unlock(&adapter->fw_lock);
-		return -1;
+		ltb->buff = NULL;
 	}
 	mutex_unlock(&adapter->fw_lock);
-	return 0;
+	return rc;
 }
 
 static void free_long_term_buff(struct ibmvnic_adapter *adapter,
@@ -258,6 +260,8 @@ static void free_long_term_buff(struct ibmvnic_adapter *adapter,
 	    adapter->reset_reason != VNIC_RESET_TIMEOUT)
 		send_request_unmap(adapter, ltb->map_id);
 	dma_free_coherent(dev, ltb->size, ltb->buff, ltb->addr);
+	ltb->buff = NULL;
+	ltb->map_id = 0;
 }
 
 static int reset_long_term_buff(struct ibmvnic_adapter *adapter,
@@ -747,8 +751,11 @@ static int init_tx_pools(struct net_device *netdev)
 
 	adapter->tso_pool = kcalloc(tx_subcrqs,
 				    sizeof(struct ibmvnic_tx_pool), GFP_KERNEL);
-	if (!adapter->tso_pool)
+	if (!adapter->tso_pool) {
+		kfree(adapter->tx_pool);
+		adapter->tx_pool = NULL;
 		return -1;
+	}
 
 	adapter->num_active_tx_pools = tx_subcrqs;
 
@@ -1159,8 +1166,7 @@ static int __ibmvnic_open(struct net_device *netdev)
 
 	rc = set_link_state(adapter, IBMVNIC_LOGICAL_LNK_UP);
 	if (rc) {
-		for (i = 0; i < adapter->req_rx_queues; i++)
-			napi_disable(&adapter->napi[i]);
+		ibmvnic_napi_disable(adapter);
 		release_resources(adapter);
 		return rc;
 	}
@@ -1942,7 +1948,7 @@ static int do_reset(struct ibmvnic_adapter *adapter,
 	u64 old_num_rx_queues, old_num_tx_queues;
 	u64 old_num_rx_slots, old_num_tx_slots;
 	struct net_device *netdev = adapter->netdev;
-	int i, rc;
+	int rc;
 
 	netdev_dbg(adapter->netdev,
 		   "[S:%d FOP:%d] Reset reason %d, reset_state %d\n",
@@ -2087,10 +2093,6 @@ static int do_reset(struct ibmvnic_adapter *adapter,
 
 	/* refresh device's multicast list */
 	ibmvnic_set_multi(netdev);
-
-	/* kick napi */
-	for (i = 0; i < adapter->req_rx_queues; i++)
-		napi_schedule(&adapter->napi[i]);
 
 	if (adapter->reset_reason == VNIC_RESET_FAILOVER ||
 	    adapter->reset_reason == VNIC_RESET_MOBILITY) {
