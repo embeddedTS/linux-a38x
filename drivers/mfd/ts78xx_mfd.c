@@ -82,7 +82,7 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 		goto out_pci_disable_device;
 	}
 
-	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI | PCI_IRQ_LEGACY);
+	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_LEGACY);
 	if (err < 0) {
 		err = -ENODEV;
 		goto out_pci_disable_device;
