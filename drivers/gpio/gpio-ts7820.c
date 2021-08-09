@@ -245,10 +245,12 @@ static int ts7820_gpio_probe(struct platform_device *pdev)
 
 	irqc = &gpio_chip->irq;
 	irqc->chip = irq_chip;
+	/* This will let us handle the parent IRQ in the driver */
+	irqc->parents = NULL;
+	irqc->num_parents = 0;
+	irqc->parent_handler = NULL;
 	irqc->default_type = IRQ_TYPE_NONE;
-	irqc->num_parents = 1;
-	irqc->parents = &irq->start;
-	irqc->handler = handle_bad_irq;
+	irqc->handler = handle_simple_irq;
 
 	err = gpiochip_add_data(gpio_chip, priv);
 	if (err) {
