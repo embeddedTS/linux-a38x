@@ -192,7 +192,7 @@ static int ts7820_gpio_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	const char *name = dev_name(&pdev->dev);
 	struct ts7820_gpio_priv *priv;
-	struct resource *io, *irq;
+	struct resource *irq;
 	struct gpio_chip *gpio_chip;
 	struct irq_chip *irq_chip;
 	struct gpio_irq_chip *irqc;
