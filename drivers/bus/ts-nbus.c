@@ -8,8 +8,8 @@
  * License version 2. This program is licensed "as is" without any
  * warranty of any kind, whether express or implied.
  *
- * This driver implements a GPIOs bit-banged bus, called the NBUS by Technologic
- * Systems. It is used to communicate with the peripherals in the FPGA on the
+ * This driver implements a GPIOs bit-banged bus, called the NBUS by embeddedTS
+ * It is used to communicate with the peripherals in the FPGA on the
  * TS-4600 SoM.
  */
 
@@ -347,7 +347,7 @@ static int ts_nbus_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id ts_nbus_of_match[] = {
-	{ .compatible = "technologic,ts-nbus", },
+	{ .compatible = "embeddedts,ts-nbus", },
 	{ },
 };
 MODULE_DEVICE_TABLE(of, ts_nbus_of_match);
@@ -365,5 +365,5 @@ module_platform_driver(ts_nbus_driver);
 
 MODULE_ALIAS("platform:ts_nbus");
 MODULE_AUTHOR("Sebastien Bourdelin <sebastien.bourdelin@savoirfairelinux.com>");
-MODULE_DESCRIPTION("Technologic Systems NBUS");
+MODULE_DESCRIPTION("embeddedTS NBUS");
 MODULE_LICENSE("GPL v2");

@@ -2211,7 +2211,7 @@ W:	http://wiki.openmoko.org/wiki/Neo_FreeRunner
 F:	arch/arm/mach-s3c/gta02.h
 F:	arch/arm/mach-s3c/mach-gta02.c
 
-ARM/Orion SoC/Technologic Systems TS-78xx platform support
+ARM/Orion SoC/embeddedTS TS-78xx platform support
 M:	Alexander Clouter <alex@digriz.org.uk>
 L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
 S:	Maintained
@@ -2557,7 +2557,7 @@ L:	linux-arm-kernel@lists.infradead.org
 S:	Odd Fixes
 N:	tango
 
-ARM/TECHNOLOGIC SYSTEMS TS7250 MACHINE SUPPORT
+ARM/embeddedTS TS7250 MACHINE SUPPORT
 M:	Lennert Buytenhek <kernel@wantstofly.org>
 L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
 S:	Maintained
@@ -17152,7 +17152,7 @@ F:	drivers/net/team/
 F:	include/linux/if_team.h
 F:	include/uapi/linux/if_team.h
 
-TECHNOLOGIC SYSTEMS TS-5500 PLATFORM SUPPORT
+embeddedTS TS-5500 PLATFORM SUPPORT
 M:	"Savoir-faire Linux Inc." <kernel@savoirfairelinux.com>
 S:	Maintained
 F:	arch/x86/platform/ts5500/

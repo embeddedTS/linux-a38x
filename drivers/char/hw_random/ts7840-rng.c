@@ -58,7 +58,7 @@ static int ts7840_rng_probe(struct platform_device *pdev)
 }
 
 static const struct of_device_id ts7840_rng_of_match[] = {
-	{ .compatible = "technologic,ts7840-rng", },
+	{ .compatible = "embeddedts,ts7840-rng", },
 	{},
 };
 MODULE_DEVICE_TABLE(of, ts7840_rng_of_match);
@@ -72,6 +72,6 @@ static struct platform_driver ts7840_rng_driver = {
 };
 module_platform_driver(ts7840_rng_driver);
 
-MODULE_AUTHOR("Mark Featherston <mark@embeddedarm.com>");
+MODULE_AUTHOR("Mark Featherston <mark@embeddedTS.com>");
 MODULE_DESCRIPTION("TS-7840 RNG driver");
 MODULE_LICENSE("GPL v2");

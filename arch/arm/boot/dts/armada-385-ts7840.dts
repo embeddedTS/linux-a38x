@@ -1,9 +1,9 @@
 /*
- * Device Tree file for Technologic Systems TS-7820
+ * Device Tree file for embeddedTS TS-7820
  *
- *  Copyright (C) 2017 Technologic Systems
+ *  Copyright (C) 2017-2022 Technologic Systems, Inc. dba embeddedTS
  *
- * Mark Featherston <mark@embeddedarm.com>
+ * Mark Featherston <mark@embeddedTS.com>
  *
  * This file is dual-licensed: you can use it either under the terms
  * of the GPL or the X11 license, at your option. Note that this dual
@@ -44,8 +44,8 @@
 #include <dt-bindings/gpio/gpio.h>
 
 / {
-	model = "Technologic Systems TS-7840";
-	compatible = "technologic,a385-ts7840", "marvell,armada385", "marvell,armada380";
+	model = "embeddedTS TS-7840";
+	compatible = "embeddedts,a385-ts7840", "marvell,armada385", "marvell,armada380";
 
 	aliases {
 		ethernet1 = &eth0;
@@ -182,7 +182,7 @@
 	};
 
 	tsfpga_pcie: tsfpga-pcie {
-		compatible = "technologic,ts78xx-mfd";
+		compatible = "embeddedts,ts78xx-mfd";
 		#address-cells = <1>;
 		#size-cells = <1>;
 		status = "okay";
@@ -196,13 +196,13 @@
 		};
 
 		fpgarng@a4 {
-			compatible = "technologic,ts7840-rng";
+			compatible = "embeddedts,ts7840-rng";
 			reg = <0xa4 4>;
 			status = "okay";
 		};
 
 		fpga_bank0: ts7820-gpio@24 {
-			compatible = "technologic,ts7820-gpio";
+			compatible = "embeddedts,ts7820-gpio";
 
 			/* INT A IRQ */
 			interrupt-parent = <&gic>;
@@ -252,7 +252,7 @@
 		};
 
 		fpga_bank1: ts7820-gpio@40 {
-			compatible = "technologic,ts7820-gpio";
+			compatible = "embeddedts,ts7820-gpio";
 
 			/* INT A IRQ */
 			interrupt-parent = <&gic>;
@@ -302,7 +302,7 @@
 		};
 
 		fpga_bank2: ts7820-gpio@5c {
-			compatible = "technologic,ts7820-gpio";
+			compatible = "embeddedts,ts7820-gpio";
 
 			/* INT A IRQ */
 			interrupt-parent = <&gic>;
@@ -569,7 +569,7 @@
 	status = "okay";
 
 	silabs_wdt: silabs-wdt@54 {
-		compatible = "technologic,ts7100-wdt";
+		compatible = "embeddedts,ts7100-wdt";
 		reg = <0x54>;
 		status = "okay";
 	};

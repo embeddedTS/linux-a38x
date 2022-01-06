@@ -185,7 +185,7 @@ static int m48t86_nvram_write(void *priv, unsigned int off, void *buf,
 }
 
 /*
- * The RTC is an optional feature at purchase time on some Technologic Systems
+ * The RTC is an optional feature at purchase time on some embeddedTS
  * boards. Verify that it actually exists by checking if the last two bytes
  * of the NVRAM can be changed.
  *

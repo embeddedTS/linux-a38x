@@ -206,11 +206,11 @@ config TI_SYSC
 	  found on many TI SoCs.
 
 config TS_NBUS
-	tristate "Technologic Systems NBUS Driver"
+	tristate "embeddedTS NBUS Driver"
 	depends on SOC_IMX28
 	depends on OF_GPIO && PWM
 	help
-	  Driver for the Technologic Systems NBUS which is used to interface
+	  Driver for the embeddedTS NBUS which is used to interface
 	  with the peripherals in the FPGA of the TS-4600 SoM.
 
 config UNIPHIER_SYSTEM_BUS

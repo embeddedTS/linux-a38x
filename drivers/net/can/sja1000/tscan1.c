@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * tscan1.c: driver for Technologic Systems TS-CAN1 PC104 boards
+ * tscan1.c: driver for embeddedTS TS-CAN1 PC104 boards
  *
  * Copyright 2010 Andre B. Oliveira
  */
 
 /*
  * References:
- * - Getting started with TS-CAN1, Technologic Systems, Jun 2009
- *	http://www.embeddedarm.com/documentation/ts-can1-manual.pdf
+ * - Getting started with TS-CAN1, embeddedTS, Jun 2009
+ *	http://www.embeddedTS.com/documentation/ts-can1-manual.pdf
  */
 
 #include <linux/init.h>
@@ -19,7 +19,7 @@
 #include <linux/netdevice.h>
 #include "sja1000.h"
 
-MODULE_DESCRIPTION("Driver for Technologic Systems TS-CAN1 PC104 boards");
+MODULE_DESCRIPTION("Driver for embeddedTS TS-CAN1 PC104 boards");
 MODULE_AUTHOR("Andre B. Oliveira <anbadeol@gmail.com>");
 MODULE_LICENSE("GPL");
 

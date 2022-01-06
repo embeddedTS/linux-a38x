@@ -1,10 +1,10 @@
-Technologic Systems NBUS
+embeddedTS NBUS
 
-The NBUS is a bus used to interface with peripherals in the Technologic
-Systems FPGA on the TS-4600 SoM.
+The NBUS is a bus used to interface with peripherals in the embeddedTS
+FPGA on the TS-4600 SoM.
 
 Required properties :
- - compatible		: "technologic,ts-nbus"
+ - compatible		: "embeddedts,ts-nbus"
  - #address-cells	: must be 1
  - #size-cells		: must be 0
  - pwms			: The PWM bound to the FPGA
@@ -23,7 +23,7 @@ on the bus.
 Example:
 
 	nbus {
-		compatible = "technologic,ts-nbus";
+		compatible = "embeddedts,ts-nbus";
 		pinctrl-0 = <&nbus_pins>;
 		#address-cells = <1>;
 		#size-cells = <0>;

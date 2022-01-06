@@ -65,7 +65,7 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 	pci_set_drvdata(pdev, priv);
 	priv->dev = &pdev->dev;
 
-	np = of_find_compatible_node(NULL, NULL, "technologic,ts78xx-mfd");
+	np = of_find_compatible_node(NULL, NULL, "embeddedts,ts78xx-mfd");
 	if (np == NULL) {
 		dev_err(&pdev->dev, "Couldn't find the device tree node!\n");
 		err = -ENODEV;
