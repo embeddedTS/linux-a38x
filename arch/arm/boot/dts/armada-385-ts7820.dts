@@ -1,9 +1,9 @@
 /*
- * Device Tree file for Technologic Systems TS-7820
+ * Device Tree file for embeddedTS TS-7820
  *
- *  Copyright (C) 2017 Technologic Systems
+ *  Copyright (C) 2017-2022 Technologic Systems, Inc. dba embeddedTS
  *
- * Mark Featherston <mark@embeddedarm.com>
+ * Mark Featherston <mark@embeddedTS.com>
  *
  * This file is dual-licensed: you can use it either under the terms
  * of the GPL or the X11 license, at your option. Note that this dual
@@ -44,8 +44,8 @@
 #include <dt-bindings/gpio/gpio.h>
 
 / {
-	model = "Technologic Systems TS-7820";
-	compatible = "technologic,a385-ts7820", "marvell,armada385", "marvell,armada380";
+	model = "embeddedTS TS-7820";
+	compatible = "embeddedts,a385-ts7820", "marvell,armada385", "marvell,armada380";
 
 	aliases {
 		/* So that mvebu u-boot can update the MAC addresses */
@@ -136,7 +136,7 @@
 	};
 
 	tsfpga_pcie: tsfpga-pcie {
-		compatible = "technologic,ts78xx-mfd";
+		compatible = "embeddedts,ts78xx-mfd";
 		#address-cells = <1>;
 		#size-cells = <1>;
 
@@ -149,7 +149,7 @@
 		ranges = <0 0xe4080000 0x1000>; // BAR0
 
 		fpga_bank0: ts7820-gpio@0 {
-			compatible = "technologic,ts7820-gpio";
+			compatible = "embeddedts,ts7820-gpio";
 			gpio-controller;
 			#gpio-cells = <2>;
 			reg = <0x0 0x10>;
@@ -190,7 +190,7 @@
 		};
 
 		tsfb: ts_fb {
-			compatible = "technologic,ts7820-fb";
+			compatible = "embeddedts,ts7820-fb";
 			reg = <0x30 0x4>;
 			width = <240>;
 			height = <320>;
@@ -270,7 +270,7 @@
 		};
 
 		tssdcard: tssdcard@180 {
-			compatible = "technologicsystems,tssdcard";
+			compatible = "embeddedts,tssdcard";
 			reg = <0x180 512>;
 			tssdcard,ndevices = <1>;
 			cd-gpios = <&fpga_bank0 4 GPIO_ACTIVE_LOW>;
@@ -336,7 +336,7 @@
 	status = "okay";
 
 	silabs_wdt: silabs-wdt@54 {
-		compatible = "technologicsystems,ts7800v2-wdt";
+		compatible = "embeddedts,ts7800v2-wdt";
 		reg = <0x54>;
 		status = "okay";
 	};

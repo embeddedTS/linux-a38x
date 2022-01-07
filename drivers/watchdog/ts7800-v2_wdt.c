@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Technologic Systems, Inc.
+ * Copyright (C) Technologic Systems, Inc. dba embeddedTS
  *
  *
  * This program is free software; you can redistribute it and/or modify
@@ -243,7 +243,7 @@ static int ts7800v2_wdt_remove(struct i2c_client *client)
 
 
 static const struct of_device_id ts7800v2_wdt_of_match[] = {
-	{ .compatible = "technologicsystems,ts7800v2-wdt", },
+	{ .compatible = "embeddedts,ts7800v2-wdt", },
 	{ },
 };
 MODULE_DEVICE_TABLE(of, ts7800v2_wdt_of_match);
@@ -267,7 +267,7 @@ static struct i2c_driver ts7800v2_wdt_driver = {
 
 module_i2c_driver(ts7800v2_wdt_driver);
 
-MODULE_AUTHOR("Technologic Systems Inc");
+MODULE_AUTHOR("embeddedTS Inc");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("platform:ts7800v2-wdt");
 

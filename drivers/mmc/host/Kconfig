@@ -5,10 +5,10 @@
 comment "MMC/SD/SDIO Host Controller Drivers"
 
 config TS_SDCARD
-	tristate "SD Card support for Technologic Systems ARM platform"
+	tristate "SD Card support for embeddedTS ARM platform"
 	depends on MACH_ARMADA_38X
 	help
-	  SD Card support for Technologic Systems SD Card core
+	  SD Card support for embeddedTS SD Card core
 	  on TS-78XX platform.
 
 config MMC_DEBUG

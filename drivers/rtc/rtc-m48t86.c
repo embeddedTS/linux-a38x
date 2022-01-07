@@ -193,7 +193,7 @@ static BIN_ATTR(nvram, 0644, m48t86_nvram_read, m48t86_nvram_write,
 		M48T86_NVRAM_LEN);
 
 /*
- * The RTC is an optional feature at purchase time on some Technologic Systems
+ * The RTC is an optional feature at purchase time on some embeddedTS
  * boards. Verify that it actually exists by checking if the last two bytes
  * of the NVRAM can be changed.
  *

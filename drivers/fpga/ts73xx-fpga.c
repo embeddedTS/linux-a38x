@@ -1,5 +1,5 @@
 /*
- * Technologic Systems TS-73xx SBC FPGA loader
+ * embeddedTS TS-73xx SBC FPGA loader
  *
  * Copyright (C) 2016 Florian Fainelli <f.fainelli@gmail.com>
  *

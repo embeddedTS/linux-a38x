@@ -1,7 +1,7 @@
 /*
- * Digital I/O driver for Technologic Systems TS-7800-V2
+ * Digital I/O driver for embeddedTS TS-7800-V2
  *
- * Copyright (C) 2017 Technologic Systems
+ * Copyright (C) 2017-2022 Technologic Systems, Inc. dba embeddedTS
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 2 as
@@ -442,7 +442,7 @@ static const struct gpio_chip template_chip = {
 
 static const struct of_device_id ts7800v2_gpio_of_match_table[] = {
    {
-      .compatible = "technologic,ts7800v2-gpio",
+      .compatible = "embeddedts,ts7800v2-gpio",
    },
 
    { /* sentinel */ },
@@ -524,6 +524,6 @@ static struct platform_driver ts7800v2_gpio_driver = {
 };
 module_platform_driver(ts7800v2_gpio_driver);
 
-MODULE_AUTHOR("Technologic Systems");
-MODULE_DESCRIPTION("GPIO interface for Technologic Systems TS-7800-V2 DIO");
+MODULE_AUTHOR("embeddedTS");
+MODULE_DESCRIPTION("GPIO interface for embeddedTS TS-7800-V2 DIO");
 MODULE_LICENSE("GPL");

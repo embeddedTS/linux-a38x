@@ -632,7 +632,7 @@ MODULE_DEVICE_TABLE(platform, tssdcard_devtype);
 
 static const struct of_device_id tssdcard_of_match[] = {
 	{
-		.compatible = "technologicsystems,tssdcard",
+		.compatible = "embeddedts,tssdcard",
 	}
 };
 
@@ -648,6 +648,6 @@ static struct platform_driver tssdcard_driver = {
 module_platform_driver(tssdcard_driver);
 
 MODULE_DESCRIPTION("TS-7800-V2 SDHC Driver");
-MODULE_AUTHOR("Ian Coughlan, Technologic Systems");
+MODULE_AUTHOR("Ian Coughlan, embeddedTS");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("platform:tssdcard");

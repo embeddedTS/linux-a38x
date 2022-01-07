@@ -2,7 +2,7 @@
  * FB driver for the TS-7820
  * based on drivers/video/fbdev/ocfb.c
  *
- * Copyright (c) 2018 - Technologic Systems
+ * Copyright (c) 2018-2022 Technologic Systems, Inc. dba embeddedTS
  *
  * This file is licensed under the terms of the GNU General Public
  * License version 2. This program is licensed "as is" without any
@@ -167,7 +167,7 @@ static int ts7820_fb_probe(struct platform_device *pdev)
 }
 
 static const struct of_device_id ts7820_fb_of_match[] = {
-	{ .compatible = "technologic,ts7820-fb", },
+	{ .compatible = "embeddedts,ts7820-fb", },
 	{},
 };
 MODULE_DEVICE_TABLE(of, ts7820_fb_of_match);
@@ -182,6 +182,6 @@ static struct platform_driver ts7820_fb_driver = {
 };
 module_platform_driver(ts7820_fb_driver);
 
-MODULE_AUTHOR("Mark Featherston <mark@embeddedarm.com>");
+MODULE_AUTHOR("Mark Featherston <mark@embeddedTS.com>");
 MODULE_DESCRIPTION("TS-7820 LCD driver");
 MODULE_LICENSE("GPL v2");
