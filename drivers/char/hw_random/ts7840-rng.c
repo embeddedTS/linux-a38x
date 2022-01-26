@@ -44,9 +44,9 @@ static int ts7840_rng_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, priv);
 
 	priv->base = devm_platform_ioremap_resource(pdev, 0);
-	if (!priv->base) {
+	if (IS_ERR(priv->base)) {
 		dev_err(dev, "failed to remap I/O memory\n");
-		return -ENXIO;
+		return PTR_ERR(priv->base);
 	}
 
 	rng->name = name;
