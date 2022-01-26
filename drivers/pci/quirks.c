@@ -5693,6 +5693,13 @@ static void pci_fixup_no_msi_no_pme(struct pci_dev *dev)
 DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PERICOM, 0x400e, pci_fixup_no_msi_no_pme);
 DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PERICOM, 0x400f, pci_fixup_no_msi_no_pme);
 
+static void pci_disable_pm_cap(struct pci_dev *dev)
+{
+	pci_info(dev, "Disabling pm_cap\n");
+	dev->pm_cap = 0;
+}
+DECLARE_PCI_FIXUP_FINAL(0x1204, 0x0001, pci_disable_pm_cap);
+
 static void apex_pci_fixup_class(struct pci_dev *pdev)
 {
 	pdev->class = (PCI_CLASS_SYSTEM_OTHER << 8) | pdev->class;
