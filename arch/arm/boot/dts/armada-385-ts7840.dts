@@ -183,8 +183,12 @@
 
 	tsfpga_pcie: tsfpga-pcie {
 		compatible = "embeddedts,ts78xx-mfd";
-		#address-cells = <1>;
+		#address-cells = <2>;
 		#size-cells = <1>;
+
+		vendor = <0x1e6d>;
+		device = <0x7840>;
+
 		status = "okay";
 
 		/* <ranges> is set in the driver at runtime */
@@ -197,7 +201,7 @@
 
 		fpgarng@a4 {
 			compatible = "embeddedts,ts7840-rng";
-			reg = <0xa4 4>;
+			reg = <0 0xa4 4>;
 			status = "okay";
 		};
 
@@ -213,7 +217,7 @@
 
 			gpio-controller;
 			#gpio-cells = <2>;
-			reg = <0x24 0x1c>;
+			reg = <0 0x24 0x1c>;
 			status = "okay";
 
 			gpio-line-names =
@@ -263,7 +267,7 @@
 
 			gpio-controller;
 			#gpio-cells = <2>;
-			reg = <0x40 0x1c>;
+			reg = <0 0x40 0x1c>;
 			status = "okay";
 
 			gpio-line-names =
@@ -313,7 +317,7 @@
 
 			gpio-controller;
 			#gpio-cells = <2>;
-			reg = <0x5c 0x1c>;
+			reg = <0 0x5c 0x1c>;
 			status = "okay";
 
 			gpio-line-names =
@@ -354,7 +358,7 @@
 		/* COM1 RS-232 */
 		fpga_uart0: fpga-uart0 {
 			compatible = "ns16550a";
-			reg = <0x100 8>;
+			reg = <0 0x100 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <0 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -365,7 +369,7 @@
 		/* COM2 RS-232 */
 		fpga_uart1: fpga-uart1 {
 			compatible = "ns16550a";
-			reg = <0x108 8>;
+			reg = <0 0x108 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <1 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -376,7 +380,7 @@
 		/* GPS */
 		fpga_uart2: fpga-uart2 {
 			compatible = "ns16550a";
-			reg = <0x110 8>;
+			reg = <0 0x110 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <2 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -387,7 +391,7 @@
 		/* Nimbelink */
 		fpga_uart3: fpga-uart3 {
 			compatible = "ns16550a";
-			reg = <0x118 8>;
+			reg = <0 0x118 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <3 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -398,7 +402,7 @@
 		/* Iridium Modem */
 		fpga_uart4: fpga-uart4 {
 			compatible = "ns16550a";
-			reg = <0x120 8>;
+			reg = <0 0x120 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <4 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -409,7 +413,7 @@
 		/* DSL Modem */
 		fpga_uart5: fpga-uart5 {
 			compatible = "ns16550a";
-			reg = <0x128 8>;
+			reg = <0 0x128 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <5 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -420,7 +424,7 @@
 		/* Mikrobus UART */
 		fpga_uart6: fpga-uart6 {
 			compatible = "ns16550a";
-			reg = <0x130 8>;
+			reg = <0 0x130 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <6 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -431,7 +435,7 @@
 		/* RS-485 port */
 		fpga_uart7: fpga-uart7 {
 			compatible = "ns16550a";
-			reg = <0x138 8>;
+			reg = <0 0x138 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <7 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -442,7 +446,7 @@
 		/* XBEE */
 		fpga_uart8: fpga-uart8 {
 			compatible = "ns16550a";
-			reg = <0x140 8>;
+			reg = <0 0x140 8>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
@@ -452,7 +456,7 @@
 
 		can@200 {
 			compatible = "nxp,sja1000";
-			reg = <0x200 0x00000100>;
+			reg = <0 0x200 0x00000100>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <10 IRQ_TYPE_LEVEL_HIGH>;
 			reg-io-width = <1>;
@@ -462,7 +466,7 @@
 
 		opencores_spi0: spi@400 {
 			compatible = "opencores,spi-oc";
-			reg = <0x400 32>;
+			reg = <0 0x400 32>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <11 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&fpga_pll0c1>;
@@ -488,7 +492,7 @@
 
 		ts_mmc: ts_mmc@800 {
 			compatible = "ts,tssdcore2";
-			reg = <0x800 32>;
+			reg = <0 0x800 32>;
 			interrupt-parent = <&fpga_bank0>;
 			interrupts = <14 IRQ_TYPE_LEVEL_HIGH>;
 			busy-gpios = <&fpga_bank0 15 0>;
