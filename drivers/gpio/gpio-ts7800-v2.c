@@ -184,16 +184,6 @@ static int ts7800v2_gpio_get_direction(struct gpio_chip *chip,
 {
    struct ts7800v2_gpio_priv *priv = to_gpio_ts7800v2(chip);
 
-   if (priv == NULL) {
-      printk("%s %d, priv is NULL!\n", __func__, __LINE__);
-      return -1;
-   }
-
-   if (priv->syscon == NULL) {
-	printk("%s %d, priv->syscon is NULL!\n", __func__, __LINE__);
-	return -1;
-   }
-
    if (offset >= TS7800V2_NR_DIO)
       return -EINVAL;
 
@@ -208,16 +198,6 @@ static int ts7800v2_gpio_direction_input(struct gpio_chip *chip,
    unsigned int reg, bit;
    unsigned long flags;
 
-   if (priv == NULL) {
-      printk("%s %d, priv is NULL!\n", __func__, __LINE__);
-      return -1;
-   }
-
-   if (priv->syscon == NULL) {
-	printk("%s %d, priv->syscon is NULL!\n", __func__, __LINE__);
-	return -1;
-   }
-
    if (offset >= TS7800V2_NR_DIO)
       return -EINVAL;
 
@@ -226,8 +206,9 @@ static int ts7800v2_gpio_direction_input(struct gpio_chip *chip,
 
    priv->direction[offset / 32] |= (1 << offset % 32);
    bit = 1 << dio_bitpositions[offset];
-
-   if (offset < 26) {   /* DIO or LCD header,  */
+	
+	/* DIO or LCD header,  */
+   if (offset < 26) {  
       /* These pins are open-drain with pull-ups, so making one an 'input'
 	is the same as setting the pin high */
       reg = readl(priv->syscon + 0x08);
@@ -269,24 +250,16 @@ static int ts7800v2_gpio_direction_output(struct gpio_chip *chip,
 
    int ret = 0;
 
-   if (priv == NULL) {
-      printk("%s %d, priv is NULL!\n", __func__, __LINE__);
-      return -1;
-   }
-
-   if (priv->syscon == NULL) {
-	printk("%s %d, priv->syscon is NULL!\n", __func__, __LINE__);
-	return -1;
-   }
-
    spin_lock_irqsave(&priv->lock, flags);
 
    priv->direction[offset / 32] &= ~(1 << offset % 32);
    bit = 1 << dio_bitpositions[offset];
 
-   if (offset < 26) {   /* DIO or LCD header,  */
-      if (offset == 8) {  /* SPI_MISO, read-only pin, can't make an output */
-	 printk("error: DIO #%d, read-only pin, can't make an output\n", priv->gpio_chip.base + offset);
+	/* DIO or LCD header,  */
+   if (offset < 26) {   
+	/* SPI_MISO, read-only pin, can't make an output */
+      if (offset == 8) {  
+	 printk(KERN_INFO "error: DIO #%d, read-only pin, can't make an output\n", priv->gpio_chip.base + offset);
 	 spin_unlock_irqrestore(&priv->lock, flags);
 	 return -EINVAL;
       }
@@ -341,17 +314,6 @@ static int ts7800v2_gpio_get(struct gpio_chip *chip, unsigned int offset)
    struct ts7800v2_gpio_priv *priv = to_gpio_ts7800v2(chip);
    unsigned int reg_num, reg, bit;
 
-   if (priv == NULL) {
-      printk("%s %d, priv is NULL!\n", __func__, __LINE__);
-      return -1;
-   }
-
-   if (priv->syscon == NULL) {
-	printk("%s %d, priv->syscon is NULL!\n", __func__, __LINE__);
-	return -1;
-   }
-
-   //priv->direction[offset / 32] &= ~(1 << offset % 32);
    bit = 1 << dio_bitpositions[offset];
 
    if (offset < 26) {   /* DIO or LCD header,  */
@@ -380,16 +342,9 @@ static void ts7800v2_gpio_set(struct gpio_chip *chip, unsigned int offset,
    unsigned int reg_num, reg, bit;
    unsigned long flags;
 
-   if (priv == NULL) {
-      printk("%s %d, priv is NULL!\n", __func__, __LINE__);
-      return;
-   }
-   if (priv->syscon == NULL) {
-	printk("%s %d, priv->syscon is NULL!\n", __func__, __LINE__);
-	return;
-   }
+	/* Check if requested DIO is an output. */ 
    if ((priv->direction[offset / 32] & (1 << offset % 32))) {
-      printk("DIO #%d is not an output\n", priv->gpio_chip.base + offset);
+      printk(KERN_INFO "DIO #%d is not an output\n", priv->gpio_chip.base + offset);
       return;
    }
 
@@ -397,7 +352,7 @@ static void ts7800v2_gpio_set(struct gpio_chip *chip, unsigned int offset,
 
    if (offset < 26) {   /* DIO or LCD header,  */
       if (offset == 8)  { /* SPI_MISO, read-only pin, can't set */
-	 printk("error: DIO #%d, read-only pin, can't be set\n", priv->gpio_chip.base + offset);
+	 printk(KERN_INFO "error: DIO #%d, read-only pin, can't be set\n", priv->gpio_chip.base + offset);
 	 spin_unlock_irqrestore(&priv->lock, flags);
 	 return;
       }
@@ -438,7 +393,6 @@ static void ts7800v2_gpio_set(struct gpio_chip *chip, unsigned int offset,
 
 }
 
-
 static const struct gpio_chip template_chip = {
    .label			= "ts7800v2-gpio",
    .owner			= THIS_MODULE,
@@ -478,14 +432,14 @@ static int ts7800v2_gpio_probe(struct platform_device *pdev)
 
    pcidev = pci_get_device(0x1204, 0x0001, NULL);
    if (!pcidev) {
-      printk("Cannot find FPGA at PCI 1204:0001\n");
+      printk(KERN_INFO "Cannot find FPGA at PCI 1204:0001\n");
       return -EINVAL;
    }
 
    if (!pci_is_enabled(pcidev)) {
-      printk("%s enable FPGA...\n", __func__);
+      printk(KERN_INFO "%s enable FPGA...\n", __func__);
       if (pci_enable_device(pcidev)) {
-	 printk("Cannot enable FPGA at PCI 1204:0001\n");
+	 printk(KERN_INFO "Cannot enable FPGA at PCI 1204:0001\n");
 	 return -EINVAL;
       }
    }
