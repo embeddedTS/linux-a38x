@@ -87,6 +87,12 @@
 
 		/* <ranges> is set in the driver at runtime */
 
+		tssdcore@2,100 {
+			compatible = "embeddedts,tssdcard";
+			reg = <2 0x100 0x200>;
+			status = "okay";
+		};
+
 		fpgarng@2,44 {
 			compatible = "embeddedts,ts7840-rng";
 			reg = <2 0x44 4>;
