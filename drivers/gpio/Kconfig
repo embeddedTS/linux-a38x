@@ -1409,7 +1409,7 @@ config GPIO_WM8994
 	  CODECs from Wolfson Microelectronics.
 
 config GPIO_TS7800_V2
-	tristate "embeddedTS TS-7800 FPGA GPIO support"
+	bool "embeddedTS TS-7800 FPGA GPIO support"
 	depends on MFD_TS78XX
 	select GPIO_GENERIC
 	default n
