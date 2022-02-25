@@ -1,3 +1,4 @@
+#define DEBUG
 /*
  * i2c watchdog
  *
@@ -207,6 +208,7 @@ static int ts7100_wdt_probe(struct i2c_client *c,
 	u32 t;
 	client = c;
 
+	printk(KERN_INFO "HERE:  %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	dev_dbg(&client->dev, "%s\n", __func__);
 
 	/* TODO: Support power off events through the microcontroller

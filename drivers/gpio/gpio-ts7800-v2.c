@@ -206,9 +206,9 @@ static int ts7800v2_gpio_direction_input(struct gpio_chip *chip,
 
    priv->direction[offset / 32] |= (1 << offset % 32);
    bit = 1 << dio_bitpositions[offset];
-	
+
 	/* DIO or LCD header,  */
-   if (offset < 26) {  
+   if (offset < 26) {
       /* These pins are open-drain with pull-ups, so making one an 'input'
 	is the same as setting the pin high */
       reg = readl(priv->syscon + 0x08);
@@ -256,12 +256,12 @@ static int ts7800v2_gpio_direction_output(struct gpio_chip *chip,
    bit = 1 << dio_bitpositions[offset];
 
 	/* DIO or LCD header,  */
-   if (offset < 26) {   
+   if (offset < 26) {
 	/* SPI_MISO, read-only pin, can't make an output */
-      if (offset == 8) {  
+      if (offset == 8) {
 	 printk(KERN_INFO "error: DIO #%d, read-only pin, can't make an output\n", priv->gpio_chip.base + offset);
 	 spin_unlock_irqrestore(&priv->lock, flags);
-	 return -EINVAL;
+	return -EINVAL;
       }
       reg_num = 0x08;
    } else if (offset < 58) {  /* pc/104 Row A */
@@ -282,7 +282,7 @@ static int ts7800v2_gpio_direction_output(struct gpio_chip *chip,
    } else if (offset < 116) { /* pc/104 Row D */
       if (offset >= 104 && offset <= 107) {  /* D[4..7], read-only pins */
 	  spin_unlock_irqrestore(&priv->lock, flags);
-	  return -EINVAL;
+	return -EINVAL;
       }
       reg = readl(priv->syscon + 0x2C);
       reg |= bit;
@@ -342,7 +342,7 @@ static void ts7800v2_gpio_set(struct gpio_chip *chip, unsigned int offset,
    unsigned int reg_num, reg, bit;
    unsigned long flags;
 
-	/* Check if requested DIO is an output. */ 
+	/* Check if requested DIO is an output. */
    if ((priv->direction[offset / 32] & (1 << offset % 32))) {
       printk(KERN_INFO "DIO #%d is not an output\n", priv->gpio_chip.base + offset);
       return;
@@ -354,7 +354,7 @@ static void ts7800v2_gpio_set(struct gpio_chip *chip, unsigned int offset,
       if (offset == 8)  { /* SPI_MISO, read-only pin, can't set */
 	 printk(KERN_INFO "error: DIO #%d, read-only pin, can't be set\n", priv->gpio_chip.base + offset);
 	 spin_unlock_irqrestore(&priv->lock, flags);
-	 return;
+	return;
       }
       reg_num = 0x08;
    } else if (offset < 58) {  /* pc/104 Row A */
@@ -364,7 +364,7 @@ static void ts7800v2_gpio_set(struct gpio_chip *chip, unsigned int offset,
    } else if (offset < 101) { /* pc/104 Row C */
        if (offset >= 104 && offset <= 107) {  /* D[4..7], read-only pins */
 	  spin_unlock_irqrestore(&priv->lock, flags);
-	  return;
+	return;
        }
       reg_num = 0x18;
    } else if (offset < 116) { /* pc/104 Row D */
@@ -420,57 +420,19 @@ static int ts7800v2_gpio_probe(struct platform_device *pdev)
    struct resource *res;
    const struct of_device_id *match;
    struct ts7800v2_gpio_priv *priv;
-   u32 ngpio, reg;
+   u32 reg;
    int base;
    int ret;
    unsigned long mem_size;
    void __iomem  *membase;
-   struct pci_dev *pcidev;
    unsigned int p = 0;
 
-    /* The pcie must be enabled before we can access the fpga registers! */
-
-   pcidev = pci_get_device(0x1204, 0x0001, NULL);
-   if (!pcidev) {
-      printk(KERN_INFO "Cannot find FPGA at PCI 1204:0001\n");
-      return -EINVAL;
-   }
-
-   if (!pci_is_enabled(pcidev)) {
-      printk(KERN_INFO "%s enable FPGA...\n", __func__);
-      if (pci_enable_device(pcidev)) {
-	 printk(KERN_INFO "Cannot enable FPGA at PCI 1204:0001\n");
-	 return -EINVAL;
-      }
-   }
-
-   match = of_match_device(ts7800v2_gpio_of_match_table, dev);
-   if (!match)
-      return -EINVAL;
-
-   if (of_property_read_u32(dev->of_node, "ngpios", &ngpio))
-      ngpio = TS7800V2_NR_DIO;
-
-   if (of_property_read_u32(dev->of_node, "base", &base))
-      base = TS7800V2_DIO_BASE;
-
-   /* try to get the FPGA's address by looking at the BAR register */
-   if (pci_read_config_dword(pcidev, PCI_BASE_ADDRESS_2, &p) || p == 0) {
-	 /* Failed, so try device-tree */
-	 pr_err("Error reading FPGA address from PCI config-space\n");
-
-	  res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	  if (!res) {
-	     dev_err(&pdev->dev, "no MEM specified in Device-Tree\n");
-	     return -ENXIO;
-	  }
-
-	 mem_size = resource_size(res);
-	 membase = devm_ioremap(dev, res->start, resource_size(res));
-   } else {
-      mem_size = 0x100;
-      membase = devm_ioremap(dev, p, mem_size);
-   }
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+  if (!res) {
+     dev_err(&pdev->dev, "no MEM specified in Device-Tree\n");
+     return -ENXIO;
+  }
+ membase = devm_ioremap(dev, res->start, resource_size(res));
 
    if (IS_ERR(membase)) {
       pr_err("Could not map resource\n");
@@ -490,12 +452,11 @@ static int ts7800v2_gpio_probe(struct platform_device *pdev)
    reg = readl(priv->syscon + 8) | 0x3ff7ffff;
    writel(reg, priv->syscon + 8);
 
-
    spin_lock_init(&priv->lock);
    priv->gpio_chip = template_chip;
    priv->gpio_chip.label = "ts7800v2-gpio";
-   priv->gpio_chip.ngpio = ngpio;
-   priv->gpio_chip.base = base;
+   priv->gpio_chip.ngpio = TS7800V2_NR_DIO;
+   priv->gpio_chip.base = TS7800V2_DIO_BASE;
    pdev->dev.platform_data = &priv;
    priv->gpio_chip.parent = dev;
 

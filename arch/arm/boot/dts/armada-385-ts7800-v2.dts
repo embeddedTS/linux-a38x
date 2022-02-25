@@ -413,7 +413,7 @@
 	status = "okay";
 
 	silabs_wdt: silabs-wdt@54 {
-		compatible = "embeddedts,ts7800v2-wdt";
+		compatible = "embeddedts,ts7100-wdt";
 		reg = <0x54>;
 		status = "okay";
 	};
