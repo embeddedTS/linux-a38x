@@ -1,4 +1,3 @@
-#define DEBUG
 /*
  * i2c watchdog
  *
