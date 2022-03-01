@@ -45,13 +45,13 @@
 
 		green-led {
 			label = "green-led";
-			gpios = <&fpga_bank0 19 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio0 19 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "heartbeat";
 		};
 
 		red-led {
 			label = "red-led";
-			gpios = <&fpga_bank0 20 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio0 20 GPIO_ACTIVE_LOW>;
 			default-state = "off";
 		};
 	};
@@ -97,7 +97,7 @@
                 ngpios = <118>;
                 #address-cells = <0x1>;
                 #size-cells = <0>;
-                reg = <0xFC081000 0x100>;     /* syscon register */
+                reg = <2 0x4 0x75>;     /* syscon register */
                 status = "okay";
 
 		gpio-line-names=
@@ -546,4 +546,23 @@
 
 &usb3_1 {
 	status = "okay";
+};
+
+&gpio0 {
+	status = "okay";
+
+	spi0_cs3n {
+		gpio-hog;
+		gpios = <28 0x0>;
+		output-high;
+		line-name = "spi0-cs3n";
+	};
+
+	en_usb_host_5v {
+		gpio-hog;
+		gpios = <45 0x0>;
+		output-high;
+		line-name = "en-usb-host-5v";
+	};
+
 };
