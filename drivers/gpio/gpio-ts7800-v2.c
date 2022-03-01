@@ -427,24 +427,29 @@ static int ts7800v2_gpio_probe(struct platform_device *pdev)
    void __iomem  *membase;
    unsigned int p = 0;
 
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-  if (!res) {
+   printk(KERN_INFO "Started %s, %d", __FUNCTION__, __LINE__);
+
+   res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+   if (!res) {
      dev_err(&pdev->dev, "no MEM specified in Device-Tree\n");
      return -ENXIO;
-  }
- membase = devm_ioremap(dev, res->start, resource_size(res));
+   }
+   membase = devm_ioremap(dev, res->start, resource_size(res));
+   printk(KERN_INFO "Started %s, %d", __FUNCTION__, __LINE__);
 
    if (IS_ERR(membase)) {
       pr_err("Could not map resource\n");
       return -ENOMEM;
    }
 
+   printk(KERN_INFO "Started %s, %d", __FUNCTION__, __LINE__);
    priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
    if (!priv)
       return -ENOMEM;
 
    priv->syscon = membase;
 
+   printk(KERN_INFO "Started %s, %d", __FUNCTION__, __LINE__);
    memset(priv->direction, 0xFF, sizeof(priv->direction));
    memset(priv->ovalue, 0, sizeof(priv->ovalue));
    /* Set all the DIO/LCD outputs high (they are open-drain) */
@@ -452,6 +457,7 @@ static int ts7800v2_gpio_probe(struct platform_device *pdev)
    reg = readl(priv->syscon + 8) | 0x3ff7ffff;
    writel(reg, priv->syscon + 8);
 
+   printk(KERN_INFO "Started %s, %d", __FUNCTION__, __LINE__);
    spin_lock_init(&priv->lock);
    priv->gpio_chip = template_chip;
    priv->gpio_chip.label = "ts7800v2-gpio";
@@ -460,6 +466,7 @@ static int ts7800v2_gpio_probe(struct platform_device *pdev)
    pdev->dev.platform_data = &priv;
    priv->gpio_chip.parent = dev;
 
+   printk(KERN_INFO "Started %s, %d", __FUNCTION__, __LINE__);
    platform_set_drvdata(pdev, priv);
 
    ret = gpiochip_add(&priv->gpio_chip);
