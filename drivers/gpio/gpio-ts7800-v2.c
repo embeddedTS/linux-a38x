@@ -342,12 +342,6 @@ static void ts7800v2_gpio_set(struct gpio_chip *chip, unsigned int offset,
    unsigned int reg_num, reg, bit;
    unsigned long flags;
 
-	/* Check if requested DIO is an output. */
-   if ((priv->direction[offset / 32] & (1 << offset % 32))) {
-      printk(KERN_INFO "DIO #%d is not an output\n", priv->gpio_chip.base + offset);
-      return;
-   }
-
    spin_lock_irqsave(&priv->lock, flags);
 
    if (offset < 26) {   /* DIO or LCD header,  */
@@ -469,11 +463,15 @@ static int ts7800v2_gpio_probe(struct platform_device *pdev)
    printk(KERN_INFO "Started %s, %d", __FUNCTION__, __LINE__);
    platform_set_drvdata(pdev, priv);
 
+   printk(KERN_INFO "Platform_set_drvdata() done.  Next gpiochip_add(). %s, %d\n", __FUNCTION__, __LINE__);
+
    ret = gpiochip_add(&priv->gpio_chip);
    if (ret < 0) {
       dev_err(&pdev->dev, "Unable to register gpiochip\n");
       return ret;
    }
+
+   printk(KERN_INFO "ts7800v2_gpio driver probe successful.\n");
 
    return 0;
 }
