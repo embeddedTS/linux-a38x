@@ -319,6 +319,8 @@ patternProperties:
     description: Elgin S/A.
   "^elida,.*":
     description: Shenzhen Elida Technology Co., Ltd.
+  "^embeddedts,.*":
+    description: embeddedTS
   "^embest,.*":
     description: Shenzhen Embest Technology Co., Ltd.
   "^emlid,.*":
@@ -1055,8 +1057,6 @@ patternProperties:
     description: Toby Churchill Ltd.
   "^technexion,.*":
     description: TechNexion
-  "^embeddedts,.*":
-    description: embeddedTS
   "^tempo,.*":
     description: Tempo Semiconductor
   "^techstar,.*":

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Digital I/O driver for Technologic Systems TS-7800-V2
  *
@@ -18,7 +19,6 @@
 #include <linux/spinlock.h>
 #include <linux/module.h>
 #include <linux/pci.h>
-#include <linux/device.h>
 
 #define TS7800V2_NR_DIO	    118
 #define TS7800V2_DIO_BASE  64
@@ -259,10 +259,10 @@ static int ts7800v2_gpio_direction_output(struct gpio_chip *chip,
 	if (offset < 26) {
 			/* SPI_MISO, read-only pin, can't make an output */
 		if (offset == 8) {
-				printk(KERN_INFO "error: DIO #%d, read-only pin, can't make an output\n",
+			dev_info(priv->gpio_chip.parent, "error: DIO #%d, read-only pin, can't make an output\n",
 						priv->gpio_chip.base + offset);
-				spin_unlock_irqrestore(&priv->lock, flags);
-				return -EINVAL;
+			spin_unlock_irqrestore(&priv->lock, flags);
+			return -EINVAL;
 		}
 		reg_num = 0x08;
 	} else if (offset < 58) {  /* pc/104 Row A */
@@ -347,7 +347,7 @@ static void ts7800v2_gpio_set(struct gpio_chip *chip, unsigned int offset,
 
 	if (offset < 26) {   /* DIO or LCD header,  */
 		if (offset == 8)  { /* SPI_MISO, read-only pin, can't set */
-			printk(KERN_INFO "error: DIO #%d, read-only pin, can't be set\n",
+			dev_info(priv->gpio_chip.parent, "error: DIO #%d, read-only pin, can't be set\n",
 						priv->gpio_chip.base + offset);
 			spin_unlock_irqrestore(&priv->lock, flags);
 			return;
@@ -402,7 +402,7 @@ static const struct gpio_chip template_chip = {
 
 static const struct of_device_id ts7800v2_gpio_of_match_table[] = {
 	{
-		.compatible = "technologic,ts7800v2-gpio",
+		.compatible = "embeddedts,ts7800v2-gpio",
 	},
 
 	{ /* sentinel */ },
@@ -459,7 +459,7 @@ static int ts7800v2_gpio_probe(struct platform_device *pdev)
 		return ret;
 	}
 
-	printk(KERN_INFO "ts7800v2_gpio driver probe successful.\n");
+	dev_info(&pdev->dev, "ts7800v2_gpio driver probe successful.\n");
 
 	return 0;
 }

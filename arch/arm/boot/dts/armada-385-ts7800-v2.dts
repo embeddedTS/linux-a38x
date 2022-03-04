@@ -251,7 +251,7 @@
 		};
 
 		ts7800v2_gpio: ts7800v2-gpio {   /* drivers/gpio/gpio-ts7800-v2.c */
-                	compatible = "technologic,ts7800v2-gpio";
+                	compatible = "embeddedts,ts7800v2-gpio";
                 	gpio-controller;
                 	#gpio-cells = <2>;
                 	base = <64>;
