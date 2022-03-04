@@ -1,0 +1,8 @@
+* embeddedTS TS-7800-V2 FPGA GPIO controller bindings
+
+This bindings describes the GPIO controller for embeddedTS's TS-7800-v2 FPGA
+core.
+
+Required properties:
+- compatible: Should be
+                "embeddedts,ts7800v2-gpio"
