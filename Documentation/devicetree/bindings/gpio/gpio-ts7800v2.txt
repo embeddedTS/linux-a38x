@@ -5,4 +5,4 @@ core.
 
 Required properties:
 - compatible: Should be
-                "embeddedts,ts7800v2-gpio"
+                "technologic,ts7800v2-gpio"

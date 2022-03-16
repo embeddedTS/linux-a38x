@@ -518,3 +518,9 @@ config SERIAL_OF_PLATFORM
 	  are probed through devicetree, including Open Firmware based
 	  PowerPC systems and embedded systems on architectures using the
 	  flattened device tree format.
+
+config TS7800_ISA16550
+	tristate "TS-7800 ISA 16550 serial port support"
+	depends on SERIAL_8250 && MACH_ARMADA_38X
+	help
+	  ISA 16550 serial port support for the Technologic Systems' TS-7800-V2
