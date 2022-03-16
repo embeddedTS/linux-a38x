@@ -554,14 +554,12 @@
 	status = "okay";
 
 	spi0_cs3n {
-		gpio-hog;
 		gpios = <28 0x0>;
 		output-high;
 		line-name = "spi0-cs3n";
 	};
 
 	en_usb_host_5v {
-		gpio-hog;
 		gpios = <45 0x0>;
 		output-high;
 		line-name = "en-usb-host-5v";

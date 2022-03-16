@@ -607,7 +607,6 @@ config GPIO_TS4800
 	help
 	  This driver support TS-4800 FPGA GPIO controllers.
 
-
 config GPIO_THUNDERX
 	tristate "Cavium ThunderX/OCTEON-TX GPIO"
 	depends on ARCH_THUNDER || (64BIT && COMPILE_TEST)
