@@ -45,7 +45,7 @@
 
 / {
 	model = "embeddedTS TS-7820";
-	compatible = "embeddedts,a385-ts7820", "marvell,armada385", "marvell,armada380";
+	compatible = "technologic,a385-ts7820", "marvell,armada385", "marvell,armada380";
 
 	aliases {
 		/* So that mvebu u-boot can update the MAC addresses */
@@ -136,7 +136,7 @@
 	};
 
 	tsfpga_pcie: tsfpga-pcie {
-		compatible = "embeddedts,ts78xx-mfd";
+		compatible = "technologic,ts78xx-mfd";
 		#address-cells = <1>;
 		#size-cells = <1>;
 
@@ -149,7 +149,7 @@
 		ranges = <0 0xe4080000 0x1000>; // BAR0
 
 		fpga_bank0: ts7820-gpio@0 {
-			compatible = "embeddedts,ts7820-gpio";
+			compatible = "technologic,ts7820-gpio";
 			gpio-controller;
 			#gpio-cells = <2>;
 			reg = <0x0 0x10>;
@@ -190,7 +190,7 @@
 		};
 
 		tsfb: ts_fb {
-			compatible = "embeddedts,ts7820-fb";
+			compatible = "technologic,ts7820-fb";
 			reg = <0x30 0x4>;
 			width = <240>;
 			height = <320>;
@@ -270,7 +270,7 @@
 		};
 
 		tssdcard: tssdcard@180 {
-			compatible = "embeddedts,tssdcard";
+			compatible = "technologic,tssdcard";
 			reg = <0x180 512>;
 			tssdcard,ndevices = <1>;
 			cd-gpios = <&fpga_bank0 4 GPIO_ACTIVE_LOW>;
@@ -336,7 +336,7 @@
 	status = "okay";
 
 	silabs_wdt: silabs-wdt@54 {
-		compatible = "embeddedts,ts7800v2-wdt";
+		compatible = "technologic,ts7800v2-wdt";
 		reg = <0x54>;
 		status = "okay";
 	};

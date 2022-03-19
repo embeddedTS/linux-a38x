@@ -332,7 +332,7 @@ tbs	TBS Technologies
 tcg	Trusted Computing Group
 tcl	Toby Churchill Ltd.
 technexion	TechNexion
-embeddedts	embeddedTS
+technologic	embeddedTS
 terasic	Terasic Inc.
 thine	THine Electronics, Inc.
 ti	Texas Instruments

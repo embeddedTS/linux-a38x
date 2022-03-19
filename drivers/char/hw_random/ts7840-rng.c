@@ -63,7 +63,7 @@ static int ts7840_rng_probe(struct platform_device *pdev)
 }
 
 static const struct of_device_id ts7840_rng_of_match[] = {
-	{ .compatible = "embeddedts,ts7840-rng", },
+	{ .compatible = "technologic,ts7840-rng", },
 	{},
 };
 MODULE_DEVICE_TABLE(of, ts7840_rng_of_match);

@@ -243,7 +243,7 @@ static int ts7800v2_wdt_remove(struct i2c_client *client)
 
 
 static const struct of_device_id ts7800v2_wdt_of_match[] = {
-	{ .compatible = "embeddedts,ts7800v2-wdt", },
+	{ .compatible = "technologic,ts7800v2-wdt", },
 	{ },
 };
 MODULE_DEVICE_TABLE(of, ts7800v2_wdt_of_match);
