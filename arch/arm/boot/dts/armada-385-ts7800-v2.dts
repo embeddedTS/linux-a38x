@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /*
  * Device Tree file for embeddedTS TS-7800-V2
- * Copyright (C) 2017-2022 embeddedts Systems, Inc. dba embeddedTS
+ * Copyright (C) 2017-2022 technologic Systems, Inc. dba embeddedTS
  */
 
 /dts-v1/;
@@ -11,7 +11,7 @@
 
 / {
 	model = "embeddedTS TS-7800-V2";
-	compatible = "embeddedts,a385-ts7800-v2", "marvell,armada385", "marvell,armada380";
+	compatible = "technologic,a385-ts7800-v2", "marvell,armada385", "marvell,armada380";
 
 	aliases {
 		ethernet1 = &eth0;
@@ -73,7 +73,7 @@
 	};
 
 	tsfpga_pcie: tsfpga-pcie {
-		compatible = "embeddedts,ts78xx-mfd";
+		compatible = "technologic,ts78xx-mfd";
 
 		vendor = <0x1204>;
 		device = <0x0001>;
@@ -88,13 +88,13 @@
 		/* <ranges> is set in the driver at runtime */
 
 		tssdcore@2,100 {
-			compatible = "embeddedts,tssdcard";
+			compatible = "technologic,tssdcard";
 			reg = <2 0x100 0x200>;
 			status = "okay";
 		};
 
 		fpgarng@2,44 {
-			compatible = "embeddedts,ts7840-rng";
+			compatible = "technologic,ts7840-rng";
 			reg = <2 0x44 4>;
 			status = "okay";
 		};
@@ -264,7 +264,7 @@
 	status = "okay";
 
 	silabs_wdt: silabs-wdt@54 {
-		compatible = "embeddedts,ts7100-wdt";
+		compatible = "technologic,ts7100-wdt";
 		reg = <0x54>;
 		status = "okay";
 	};

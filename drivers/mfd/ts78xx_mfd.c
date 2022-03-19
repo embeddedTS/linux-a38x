@@ -166,7 +166,7 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 		ret = -ENODEV;
 		goto out;
 	}
-	np = of_find_compatible_node(NULL, NULL, "embeddedts,ts78xx-mfd");
+	np = of_find_compatible_node(NULL, NULL, "technologic,ts78xx-mfd");
 	if (np == NULL) {
 		dev_err(dev, "Couldn't find the device tree node!\n");
 		ret = -ENODEV;
@@ -262,7 +262,7 @@ static int tsfpga_plat_driver_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id tsmfd_of_match_table[] = {
-	{ .compatible = "embeddedts,ts78xx-mfd", },
+	{ .compatible = "technologic,ts78xx-mfd", },
 	{},
 };
 
@@ -276,6 +276,6 @@ static struct platform_driver tsmfd_platform_driver = {
 };
 module_platform_driver(tsmfd_platform_driver);
 
-MODULE_AUTHOR("Mark Featherston <mark@embeddedts.com>");
+MODULE_AUTHOR("Mark Featherston <mark@technologic.com>");
 MODULE_DESCRIPTION("TS-78XX Series FPGA MFD driver");
 MODULE_LICENSE("GPL v2");

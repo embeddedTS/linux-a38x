@@ -11,7 +11,7 @@
 / {
 
 	model = "embeddedTS i.MX28 TS-4600";
-	compatible = "embeddedts,imx28-ts4600", "fsl,imx28";
+	compatible = "technologic,imx28-ts4600", "fsl,imx28";
 
 	memory@40000000 {
 		device_type = "memory";

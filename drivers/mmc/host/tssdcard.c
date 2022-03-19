@@ -615,7 +615,7 @@ MODULE_DEVICE_TABLE(platform, tssdcard_devtype);
 
 static const struct of_device_id tssdcard_of_match[] = {
 	{
-		.compatible = "embeddedts,tssdcard",
+		.compatible = "technologic,tssdcard",
 	}
 };
 

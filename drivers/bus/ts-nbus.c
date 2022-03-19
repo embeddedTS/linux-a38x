@@ -347,7 +347,7 @@ static int ts_nbus_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id ts_nbus_of_match[] = {
-	{ .compatible = "embeddedts,ts-nbus", },
+	{ .compatible = "technologic,ts-nbus", },
 	{ },
 };
 MODULE_DEVICE_TABLE(of, ts_nbus_of_match);

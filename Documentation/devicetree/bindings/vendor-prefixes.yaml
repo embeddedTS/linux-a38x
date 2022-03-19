@@ -1055,7 +1055,7 @@ patternProperties:
     description: Toby Churchill Ltd.
   "^technexion,.*":
     description: TechNexion
-  "^embeddedts,.*":
+  "^technologic,.*":
     description: embeddedTS
   "^tempo,.*":
     description: Tempo Semiconductor

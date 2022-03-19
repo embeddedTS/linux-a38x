@@ -267,7 +267,7 @@ static int ts7820_gpio_probe(struct platform_device *pdev)
 }
 
 static const struct of_device_id ts7820_gpio_of_match[] = {
-	{ .compatible = "embeddedts,ts7820-gpio", },
+	{ .compatible = "technologic,ts7820-gpio", },
 	{},
 };
 MODULE_DEVICE_TABLE(of, ts7820_gpio_of_match);

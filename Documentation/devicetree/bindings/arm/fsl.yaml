@@ -51,7 +51,7 @@ properties:
               - fsl,imx28-evk
               - i2se,duckbill
               - i2se,duckbill-2
-              - embeddedts,imx28-ts4600
+              - technologic,imx28-ts4600
           - const: fsl,imx28
       - description: i.MX28 Duckbill 2 based Boards
         items:
@@ -94,7 +94,7 @@ properties:
               - armadeus,imx51-apf51    # APF51 SoM
               - armadeus,imx51-apf51dev # APF51 SoM on APF51Dev board
               - fsl,imx51-babbage
-              - embeddedts,imx51-ts4800
+              - technologic,imx51-ts4800
           - const: fsl,imx51
 
       - description: i.MX53 based Boards
@@ -127,8 +127,8 @@ properties:
               - technexion,imx6q-pico-hobbit  # TechNexion i.MX6Q Pico-Hobbit
               - technexion,imx6q-pico-nymph   # TechNexion i.MX6Q Pico-Nymph
               - technexion,imx6q-pico-pi      # TechNexion i.MX6Q Pico-Pi
-              - embeddedts,imx6q-ts4900
-              - embeddedts,imx6q-ts7970
+              - technologic,imx6q-ts4900
+              - technologic,imx6q-ts7970
               - toradex,apalis_imx6q            # Apalis iMX6 Module
               - toradex,apalis_imx6q-eval       # Apalis iMX6 Module on Apalis Evaluation Board
               - toradex,apalis_imx6q-ixora      # Apalis iMX6 Module on Ixora
@@ -203,8 +203,8 @@ properties:
               - technexion,imx6dl-pico-hobbit  # TechNexion i.MX6DL Pico-Hobbit
               - technexion,imx6dl-pico-nymph   # TechNexion i.MX6DL Pico-Nymph
               - technexion,imx6dl-pico-pi      # TechNexion i.MX6DL Pico-Pi
-              - embeddedts,imx6dl-ts4900
-              - embeddedts,imx6dl-ts7970
+              - technologic,imx6dl-ts4900
+              - technologic,imx6dl-ts7970
               - toradex,colibri_imx6dl          # Colibri iMX6 Module
               - toradex,colibri_imx6dl-v1_1     # Colibri iMX6 Module V1.1
               - toradex,colibri_imx6dl-eval-v3  # Colibri iMX6 Module on Colibri Evaluation Board V3

@@ -45,7 +45,7 @@
 
 / {
 	model = "embeddedTS TS-7840";
-	compatible = "embeddedts,a385-ts7840", "marvell,armada385", "marvell,armada380";
+	compatible = "technologic,a385-ts7840", "marvell,armada385", "marvell,armada380";
 
 	aliases {
 		ethernet1 = &eth0;
@@ -182,7 +182,7 @@
 	};
 
 	tsfpga_pcie: tsfpga-pcie {
-		compatible = "embeddedts,ts78xx-mfd";
+		compatible = "technologic,ts78xx-mfd";
 		#address-cells = <2>;
 		#size-cells = <1>;
 
@@ -200,13 +200,13 @@
 		};
 
 		fpgarng@a4 {
-			compatible = "embeddedts,ts7840-rng";
+			compatible = "technologic,ts7840-rng";
 			reg = <0 0xa4 4>;
 			status = "okay";
 		};
 
 		fpga_bank0: ts7820-gpio@24 {
-			compatible = "embeddedts,ts7820-gpio";
+			compatible = "technologic,ts7820-gpio";
 
 			/* INT A IRQ */
 			interrupt-parent = <&gic>;
@@ -256,7 +256,7 @@
 		};
 
 		fpga_bank1: ts7820-gpio@40 {
-			compatible = "embeddedts,ts7820-gpio";
+			compatible = "technologic,ts7820-gpio";
 
 			/* INT A IRQ */
 			interrupt-parent = <&gic>;
@@ -306,7 +306,7 @@
 		};
 
 		fpga_bank2: ts7820-gpio@5c {
-			compatible = "embeddedts,ts7820-gpio";
+			compatible = "technologic,ts7820-gpio";
 
 			/* INT A IRQ */
 			interrupt-parent = <&gic>;
@@ -573,7 +573,7 @@
 	status = "okay";
 
 	silabs_wdt: silabs-wdt@54 {
-		compatible = "embeddedts,ts7100-wdt";
+		compatible = "technologic,ts7100-wdt";
 		reg = <0x54>;
 		status = "okay";
 	};
