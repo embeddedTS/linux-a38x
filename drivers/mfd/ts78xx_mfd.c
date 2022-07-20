@@ -234,7 +234,7 @@ static int tsfpga_plat_driver_probe(struct platform_device *pdev)
 		return -ENOMEM;
 
 	id_table = devm_kzalloc(dev, sizeof(struct pci_device_id)*2, GFP_KERNEL);
-	if (!pci)
+	if (!id_table)
 		return -ENOMEM;
 
 	id_table[0].vendor = vendor;
