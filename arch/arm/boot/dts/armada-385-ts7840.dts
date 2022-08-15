@@ -694,9 +694,9 @@
 	};
 
 	/* Onboard FPGA Flash */
-	is25lq016b: flash@2 {
+	is25lq016b: flash@1 {
 		compatible = "issi,is25lq016b", "jedec,spi-nor";
-		reg = <2>;
+		reg = <1>;
 		spi-max-frequency = <20000000>;
 	};
 };
