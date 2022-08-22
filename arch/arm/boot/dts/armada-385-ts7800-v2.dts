@@ -44,16 +44,28 @@
 		status = "okay";
 
 		green-led {
-			label = "green-led";
-			gpios = <&ts7800v2_gpio 118 GPIO_ACTIVE_LOW>;
+			gpios = <&ts7800v2_gpio 118 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "heartbeat";
 		};
 
 		red-led {
-			label = "red-led";
-			gpios = <&ts7800v2_gpio 119 GPIO_ACTIVE_LOW>;
+			gpios = <&ts7800v2_gpio 119 GPIO_ACTIVE_HIGH>;
 			default-state = "off";
 		};
+
+		en-usb-host-5v {
+			gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+		};
+	};
+
+	mux: mux-controller {
+		compatible = "gpio-mux";
+		#mux-control-cells = <0>;
+		status = "okay";
+
+		mux-gpios = <&ts7800v2_gpio 120 GPIO_ACTIVE_HIGH>; // FPGA_FLASH_SELECT
+		idle-state = <0>;
 	};
 
 	soc {
@@ -70,30 +82,6 @@
 			};
 		};
 	};
-	
-	accelerometer: mma8450@1c {
-        	compatible = "fsl,mma8451";
-        	reg = <28>;
-	};
-
-	isa16550:  isa16550 { /* drivers/tty/serial/8250/ts7800_isa16550.c */
-                compatible = "technologicsystems,isa16550";
-                #address-cells = <0x1>;
-                #size-cells = <0x0>;
-                reg = <0xFA000000 0x400>;
-                isa16550,nports = <4>;   /* assuming a TS-SER4 */
-                status = "okay";
-        };
-
-        ax88796b: ax88796b {
-                compatible = "asix,ax88796b";
-                #address-cells = <0x1>;
-                #size-cells = <0x0>;
-                reg = <0xFA000000 400>; /* For the TS-ETH2 board on PC-104 */
-                status = "disabled";
-        };
-
-
 
 	tsfpga_pcie: tsfpga-pcie {
 		compatible = "embeddedts,ts78xx-mfd";
@@ -106,26 +94,36 @@
 		#size-cells = <1>;
 		interrupt-controller;
 		#interrupt-cells = <1>;
-		status = "okay";
+
+		pc104; /* Configures PC104 header as the PC104 signals, not GPIO */
 
 		/* <ranges> is set in the driver at runtime */
+
+		ts7800v2_can: ts7800v2-can@2,0 {
+			compatible = "technologic,ts7800v2-can";
+			#address-cells = <0x1>;
+			#size-cells = <0>;
+			/* This driver talks in a memory window in the syscon regs */
+			reg = <2 0x0 0x100>;
+			interrupt-parent = <&tsfpga_pcie>;
+			interrupts = <27>;
+			technologic,can-clock-frequency = <16000000>;
+		};
 
 		tssdcore@2,100 {
 			compatible = "embeddedts,tssdcard";
 			reg = <2 0x100 0x200>;
-			status = "okay";
 		};
 
 		fpgarng@2,44 {
 			compatible = "embeddedts,ts7840-rng";
 			reg = <2 0x44 4>;
-			status = "okay";
 		};
-/*
- *  FPGA UARTS
- *  Intentionally out of order to align with physical locaions and names
- *  of the original TS-7800.
-*/
+		/*
+		*  FPGA UARTS
+		*  Intentionally out of order to align with physical locaions and names
+		*  of the original TS-7800.
+		*/
 		// ttyS1
 		fpga_uart0: fpga-uart10@2,d0 {
 			compatible = "ns16550a";
@@ -136,7 +134,6 @@
 
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
-			status = "okay";
 		};
 		
 		// ttyS2
@@ -149,7 +146,6 @@
 
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
-			status = "okay";
 		};
 
 		// ttyS3
@@ -162,7 +158,6 @@
 
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
-			status = "okay";
 		};
 
 		// ttyS4
@@ -175,7 +170,6 @@
 
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
-			status = "okay";
 		};
 
 		// ttyS5
@@ -188,7 +182,6 @@
 
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
-			status = "okay";
 		};
 
 		// ttyS6
@@ -201,7 +194,6 @@
 
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
-			status = "okay";
 		};
 
 		// ttyS7
@@ -214,7 +206,6 @@
 
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
-			status = "okay";
 		};
 
 		// ttyS8
@@ -227,7 +218,6 @@
 
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
-			status = "okay";
 		};
 
 		// ttyS9
@@ -240,7 +230,6 @@
 
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
-			status = "okay";
 		};
 
 		// ttyS10
@@ -253,7 +242,6 @@
 
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
-			status = "okay";
 		};
 
 		// ttyS11
@@ -266,7 +254,6 @@
 
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
-			status = "okay";
 		};
 
 		ts7800v2_gpio: ts7800v2-gpio {   /* drivers/gpio/gpio-ts7800-v2.c */
@@ -398,8 +385,55 @@
 				"ISA_D15",
 				"ISA_D17",
 				"EN_WIFI_PWR",
-				"WIFI_RESET";
+				"WIFI_RESET",
+				"GREEN_LED",
+				"RED_LED",
+				"CPU_ACCESS_FPGA_FLASH#";
         	};
+
+		isa-mem8@0 {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			ranges = <0 3 0 0x1000000>;
+		};
+
+		isa-mem16@0 {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			ranges = <0 3 0x1000000 0x1000000>;
+		};
+
+		isa-io8@2000000 {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			ranges = <0 3 0x2000000 0x1000000>;
+		
+			/* TS-SER1 COM3 & IRQ6 jumpers */
+			ts16550@3e8 {
+				compatible = "ns16550a";
+				reg = <0x3e8 8>;
+
+				interrupt-parent = <&tsfpga_pcie>;
+				interrupts = <6>;
+
+				clock-frequency = <1843200>;
+				reg-io-width = <1>;
+			};
+		};
+
+		isa-io16@2000000 {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			ranges = <0 3 0x3000000 0x1000000>;
+		};
 	};
 };
 
@@ -425,6 +459,74 @@
 	buffer-manager = <&bm>;
 	bm,pool-long = <0>;
 	bm,pool-short = <1>;
+};
+
+&gpio0 {
+	gpio-line-names =
+		"UART0_RXD",
+		"UART0_TXD",
+		"I2C_0_CLK",
+		"I2C_0_DAT",
+		"MPP4_GE_MDC",
+		"MPP5_GE_MDIO",
+		"MPP6_GE_TXCLK",
+		"MPP7_GE_TXDO",
+		"MPP8_GE_TXD1",
+		"MPP9_GE_TXD2",
+		"MPP10_GE_TXD3",
+		"MPP11_GE_TXCTL",
+		"MPP12_GE_RXD0",
+		"MPP13_GE_RXD1",
+		"MPP14_GE_RXD2",
+		"MPP15_GE_RXD3",
+		"MPP16_GE_RXCTL",
+		"MPP17_GE_RXCLK",
+		"WIFI_IRQ#",
+		"CPU_IRQ",
+		"",
+		"",
+		"SPI_0_MOSI",
+		"SPI_0_CLK",
+		"SPI_0_MISO",
+		"SPI_0_BOOT_CS0#",
+		"",
+		"SPI_0_WIFI_CS2#",
+		"SPI_0_CS3#",
+		"GE_PHY_INT#",
+		"CPU_SPEED_1",
+		"CPU_SPEED_2";
+};
+
+&gpio1 {
+	gpio-line-names =
+		"",
+		"CPU_SPEED_0",
+		"CPU_SPEED_3",
+		"CPU_SPEED_4",
+		"CPU_TYPE_0",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"EN_EMMC_PWR",
+		"EN_FAN",
+		"CPU_TYPE_1",
+		"EN_USB_HOST_5V",
+		"FPGA_FLASH_SELECT",
+		"",
+		"",
+		"ACCEL_2_INT",
+		"EMMC_CMD",
+		"SPREAD_SPECTRUM#",
+		"DETECT_MSATA",
+		"DETECT_9478",
+		"EMMC_D3",
+		"EMMC_D0",
+		"",
+		"EMMC_CLK",
+		"EMMC_D1",
+		"EMMC_D2";
 };
 
 &i2c0 {
@@ -515,9 +617,9 @@
 	status = "okay";
 	u-boot,dm-pre-reloc;
 	num-cs = <5>;
-	cs-gpios = <0>, <0>, <0>, <0>, <&gpio0 28 0>; // cs[0], cs[1], cs[2], cs[3], cs[4]
+	cs-gpios = <0>, <0>, <0>, <0>, <&gpio0 28 GPIO_ACTIVE_HIGH>;
 
-	flash0: n25q064@0 {         /* SPI_0_BOOT */
+	n25q064@0 { /* Offboard CN99 SPI flash */
 		compatible = "n25q064", "jedec,spi-nor";
 		reg = <0>;
 		spi-max-frequency = <1000000>;
@@ -525,24 +627,34 @@
 		status = "okay";
 	};
 
-	flash4: is25lq016b@4 {      /* FPGA SPI , SPI_0_CS3#, non-native gpio cs[4] */
-		compatible = "is25lq016b", "jedec,spi-nor";
-		reg = <0x4>;
-		spi-max-frequency = <1000000>;
-		u-boot,dm-pre-reloc;
+	wilc_spi@3 {
+		compatible = "microchip,wilc3000", "microchip,wilc1000";
+		reg = <3>;
+		spi-max-frequency = <20000000>;
+		reset-gpios = <&ts7800v2_gpio 117 GPIO_ACTIVE_HIGH>;   /* WIFI_RESET# */
+		chip_en-gpios = <&ts7800v2_gpio 116 GPIO_ACTIVE_HIGH>; /* EN_WIFI_PWR */
+		interrupt-parent = <&gpio0>;
+		interrupts = <18 GPIO_ACTIVE_HIGH>;
 		status = "okay";
-	};
-
-	wilc_spi@3 {   /* WILC3000 module, SPI_0_WIFI_CS2#, MPP[27] = native cs[3]*/
-               compatible = "microchip,wilc3000", "microchip,wilc1000";
-               reg = <3>;
-               spi-max-frequency = <20000000>;
-               reset-gpios = <&ts7800v2_gpio 117 GPIO_ACTIVE_HIGH>;   /* WIFI_RESET# */
-               chip_en-gpios = <&ts7800v2_gpio 116 GPIO_ACTIVE_HIGH>; /* EN_WIFI_PWR */
-               interrupt-parent = <&gpio0>;
-               interrupts = <18 GPIO_ACTIVE_HIGH>;
-               status = "okay";
 	 };
+
+	spi@4 { /* Muxed between FPGA SPI master and this CPU's SPI */
+                compatible = "spi-mux";
+                reg = <4>;
+                #address-cells = <1>;
+                #size-cells = <0>;
+                spi-max-frequency = <1000000>;
+		mux-controls = <&mux>;
+		status = "okay";
+
+                is25lq016b@1 {
+                        compatible = "is25lq016b", "jedec,spi-nor";
+                        reg = <1>;
+                        spi-max-frequency = <1000000>;
+                        u-boot,dm-pre-reloc;
+                        status = "okay";
+                };
+        };
 };
 
 &uart0 {
@@ -568,21 +680,3 @@
 &usb3_1 {
 	status = "okay";
 };
-
-/*
-&gpio0 {
-	status = "okay";
-
-	spi0_cs3n {
-		gpios = <28 0x0>;
-		output-high;
-		line-name = "spi0-cs3n";
-	};
-
-	en_usb_host_5v {
-		gpios = <45 0x0>;
-		output-high;
-		line-name = "en-usb-host-5v";
-	};
-};
-*/

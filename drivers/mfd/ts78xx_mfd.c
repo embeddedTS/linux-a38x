@@ -23,6 +23,11 @@
 #define TS7800V2_IRQC_MASK_REG	0x4
 #define TS7800V2_IRQC_IRQS	0x8
 
+#define TS7800V2_PC104_A_MUX	0x30
+#define TS7800V2_PC104_B_MUX	0x34
+#define TS7800V2_PC104_C_MUX	0x38
+#define TS7800V2_PC104_D_MUX	0x3c
+
 struct tsmfd_of_priv {
 	struct irq_chip		chip;
 	struct irq_domain	*domain;
@@ -154,6 +159,19 @@ static int ts7800v2_irqc_enable(struct pci_dev *pdev, struct device_node *np, u3
 	return 0;
 }
 
+/* Switch mux registers on TS-7800-V2 from GPIO to a PC104 bus */
+void ts7800v2_pc104on(struct pci_dev *pdev)
+{
+	struct device *dev = &pdev->dev;
+	void __iomem *base = pci_ioremap_bar(pdev, 2);
+
+	dev_info(dev, "Enabling PC104");
+	writel(0x55555555, base + TS7800V2_PC104_A_MUX);
+	writel(0x55555555, base + TS7800V2_PC104_B_MUX);
+	writel(0x55555, base + TS7800V2_PC104_C_MUX);
+	writel(0x55555, base + TS7800V2_PC104_D_MUX);
+}
+
 static int tsfpga_pci_probe(struct pci_dev *pdev,
 			   const struct pci_device_id *ent)
 {
@@ -166,7 +184,7 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 		ret = -ENODEV;
 		goto out;
 	}
-	np = of_find_compatible_node(NULL, NULL, "technologic,ts78xx-mfd");
+	np = of_find_compatible_node(NULL, NULL, "embeddedts,ts78xx-mfd");
 	if (np == NULL) {
 		dev_err(dev, "Couldn't find the device tree node!\n");
 		ret = -ENODEV;
@@ -190,7 +208,11 @@ static int tsfpga_pci_probe(struct pci_dev *pdev,
 		}
 	}
 
-	return devm_of_platform_populate(&pdev->dev);
+	if(of_property_read_bool(np, "pc104")) {
+		ts7800v2_pc104on(pdev);
+	}
+
+	return of_platform_default_populate(np, NULL, &pdev->dev);
 
 out_pci_disable_device:
 	pci_free_irq_vectors(pdev);
@@ -262,7 +284,7 @@ static int tsfpga_plat_driver_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id tsmfd_of_match_table[] = {
-	{ .compatible = "technologic,ts78xx-mfd", },
+	{ .compatible = "embeddedts,ts78xx-mfd", },
 	{},
 };
 
@@ -276,6 +298,6 @@ static struct platform_driver tsmfd_platform_driver = {
 };
 module_platform_driver(tsmfd_platform_driver);
 
-MODULE_AUTHOR("Mark Featherston <mark@technologic.com>");
+MODULE_AUTHOR("Mark Featherston <mark@embeddedts.com>");
 MODULE_DESCRIPTION("TS-78XX Series FPGA MFD driver");
 MODULE_LICENSE("GPL v2");
