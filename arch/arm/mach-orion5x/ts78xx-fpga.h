@@ -31,6 +31,7 @@ struct fpga_devices {
 	/* embeddedTS */
 	struct fpga_device	ts_rtc;
 	struct fpga_device	ts_nand;
+	struct fpga_device	ts_sdmmc;
 	struct fpga_device	ts_rng;
 };
 

@@ -283,6 +283,48 @@ static void ts78xx_ts_nand_unload(void)
 }
 
 /*****************************************************************************
+ * SD/MMC Host controller
+ ****************************************************************************/
+#define TS_SDMMC_CTRL (TS78XX_FPGA_REGS_PHYS_BASE + 0x100)
+#define TS_SDMMC_SDBUSY 0x41
+
+static struct resource ts78xx_ts_sdmmc_resources[] = {
+	DEFINE_RES_MEM_NAMED(TS_SDMMC_CTRL, 0x100, "ts_sdmmc_ctrl"),
+	DEFINE_RES_IRQ_NAMED(TS_SDMMC_SDBUSY, "ts_sdmmc_sdbusy"),
+};
+
+static struct platform_device ts78xx_ts_sdmmc_device = {
+	.name = "ts7800v1_sdmmc",
+	.id = -1,
+	.resource = ts78xx_ts_sdmmc_resources,
+	.num_resources = ARRAY_SIZE(ts78xx_ts_sdmmc_resources),
+};
+
+static int ts78xx_ts_sdmmc_load(void)
+{
+	int rc;
+
+	if (ts78xx_fpga.supports.ts_sdmmc.init == 0) {
+		rc = platform_device_register(&ts78xx_ts_sdmmc_device);
+		if (!rc)
+			ts78xx_fpga.supports.ts_sdmmc.init = 1;
+	} else {
+		rc = platform_device_add(&ts78xx_ts_sdmmc_device);
+	}
+
+	if (rc)
+		pr_info("SD/MMC host controller could not be registered: %d\n",
+			rc);
+
+	return rc;
+}
+
+static void ts78xx_ts_sdmmc_unload(void)
+{
+	platform_device_del(&ts78xx_ts_sdmmc_device);
+}
+
+/*****************************************************************************
  * HW RNG
  ****************************************************************************/
 #define TS_RNG_DATA	(TS78XX_FPGA_REGS_PHYS_BASE | 0x044)
@@ -332,6 +374,7 @@ static void ts78xx_fpga_devices_zero_init(void)
 {
 	ts78xx_fpga.supports.ts_rtc.init = 0;
 	ts78xx_fpga.supports.ts_nand.init = 0;
+	ts78xx_fpga.supports.ts_sdmmc.init = 0;
 	ts78xx_fpga.supports.ts_rng.init = 0;
 }
 
@@ -348,8 +391,10 @@ static void ts78xx_fpga_supports(void)
 	case TS7800_REV_7:
 	case TS7800_REV_8:
 	case TS7800_REV_9:
+	case TS7800_REV_11:
 		ts78xx_fpga.supports.ts_rtc.present = 1;
 		ts78xx_fpga.supports.ts_nand.present = 1;
+		ts78xx_fpga.supports.ts_sdmmc.present = 1;
 		ts78xx_fpga.supports.ts_rng.present = 1;
 		break;
 	default:
@@ -360,11 +405,13 @@ static void ts78xx_fpga_supports(void)
 				ts78xx_fpga.id & 0xff);
 			ts78xx_fpga.supports.ts_rtc.present = 1;
 			ts78xx_fpga.supports.ts_nand.present = 1;
+			ts78xx_fpga.supports.ts_sdmmc.present = 1;
 			ts78xx_fpga.supports.ts_rng.present = 1;
 			break;
 		default:
 			ts78xx_fpga.supports.ts_rtc.present = 0;
 			ts78xx_fpga.supports.ts_nand.present = 0;
+			ts78xx_fpga.supports.ts_sdmmc.present = 0;
 			ts78xx_fpga.supports.ts_rng.present = 0;
 		}
 	}
@@ -386,6 +433,12 @@ static int ts78xx_fpga_load_devices(void)
 			ts78xx_fpga.supports.ts_nand.present = 0;
 		ret |= tmp;
 	}
+	if (ts78xx_fpga.supports.ts_sdmmc.present == 1) {
+		tmp = ts78xx_ts_sdmmc_load();
+		if (tmp)
+			ts78xx_fpga.supports.ts_sdmmc.present = 0;
+		ret |= tmp;
+	}
 	if (ts78xx_fpga.supports.ts_rng.present == 1) {
 		tmp = ts78xx_ts_rng_load();
 		if (tmp)
@@ -403,6 +456,8 @@ static int ts78xx_fpga_unload_devices(void)
 		ts78xx_ts_rtc_unload();
 	if (ts78xx_fpga.supports.ts_nand.present == 1)
 		ts78xx_ts_nand_unload();
+	if (ts78xx_fpga.supports.ts_sdmmc.present == 1)
+		ts78xx_ts_sdmmc_unload();
 	if (ts78xx_fpga.supports.ts_rng.present == 1)
 		ts78xx_ts_rng_unload();
 
@@ -575,3 +630,4 @@ MACHINE_START(TS78XX, "embeddedTS TS-78xx SBC")
 	.init_time	= orion5x_timer_init,
 	.restart	= orion5x_restart,
 MACHINE_END
+
