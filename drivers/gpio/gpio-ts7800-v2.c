@@ -27,7 +27,7 @@ struct ts7800v2_gpio_priv {
 	void __iomem  *syscon;
 	struct gpio_chip gpio_chip;
 	spinlock_t lock;
-	/* direction[4] is enough for all 118 DIOs (up to 128), 1=in, 0=out */
+	/* direction[4] is enough for 128 DIOs, 1=in, 0=out */
 	unsigned int direction[4];
 	unsigned int ovalue[4];
 };
