@@ -84,7 +84,7 @@
 	};
 
 	tsfpga_pcie: tsfpga-pcie {
-		compatible = "embeddedts,ts78xx-mfd";
+		compatible = "technologic,ts78xx-mfd";
 
 		vendor = <0x1204>;
 		device = <0x0001>;
@@ -111,12 +111,12 @@
 		};
 
 		tssdcore@2,100 {
-			compatible = "embeddedts,tssdcard";
+			compatible = "technologic,tssdcard";
 			reg = <2 0x100 0x200>;
 		};
 
 		fpgarng@2,44 {
-			compatible = "embeddedts,ts7840-rng";
+			compatible = "technologic,ts7840-rng";
 			reg = <2 0x44 4>;
 		};
 		/*
@@ -257,7 +257,7 @@
 		};
 
 		ts7800v2_gpio: ts7800v2-gpio {   /* drivers/gpio/gpio-ts7800-v2.c */
-                	compatible = "embeddedts,ts7800v2-gpio";
+                	compatible = "technologic,ts7800v2-gpio";
                 	gpio-controller;
                 	#gpio-cells = <2>;
                 	base = <64>;
@@ -536,7 +536,7 @@
 	status = "okay";
 
 	silabs_wdt: silabs-wdt@54 {
-		compatible = "embeddedts,ts7100-wdt";
+		compatible = "technologic,ts7100-wdt";
 		reg = <0x54>;
 		status = "okay";
 	};

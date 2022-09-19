@@ -198,7 +198,6 @@ static int wilc_sdio_probe(struct sdio_func *func,
 			goto disable_rtc_clk;
 	}
 
-
 	if (!init_power) {
 		wilc_wlan_power(wilc, false);
 		init_power = 1;
@@ -1134,4 +1133,4 @@ module_driver(wilc_sdio_driver,
 	      sdio_register_driver,
 	      sdio_unregister_driver);
 MODULE_LICENSE("GPL");
-MODULE_VERSION("15.5");
+MODULE_VERSION("15.6");

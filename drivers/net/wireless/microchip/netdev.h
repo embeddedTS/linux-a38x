@@ -174,12 +174,6 @@ struct wilc_wfi_key {
 	u32 cipher;
 };
 
-struct wilc_wfi_wep_key {
-	u8 *key;
-	u8 key_len;
-	u8 key_idx;
-};
-
 struct sta_info {
 	u8 sta_associated_bss[WILC_MAX_NUM_STA][ETH_ALEN];
 };
@@ -205,8 +199,6 @@ struct wilc_p2p_var {
 };
 
 static const u32 wilc_cipher_suites[] = {
-	WLAN_CIPHER_SUITE_WEP40,
-	WLAN_CIPHER_SUITE_WEP104,
 	WLAN_CIPHER_SUITE_TKIP,
 	WLAN_CIPHER_SUITE_CCMP,
 	WLAN_CIPHER_SUITE_AES_CMAC
@@ -285,13 +277,12 @@ struct wilc_priv {
 	struct net_device *dev;
 	struct host_if_drv *hif_drv;
 	struct wilc_pmkid_attr pmkid_list;
-	u8 wep_key[4][WLAN_KEY_LEN_WEP104];
-	u8 wep_key_len[4];
 
 	/* The real interface that the monitor is on */
 	struct net_device *real_ndev;
 	struct wilc_wfi_key *wilc_gtk[WILC_MAX_NUM_STA];
 	struct wilc_wfi_key *wilc_ptk[WILC_MAX_NUM_STA];
+	struct wilc_wfi_key *wilc_igtk[2];
 	u8 wilc_groupkey;
 
 	/* mutexes */
@@ -311,7 +302,7 @@ struct frame_reg {
 	bool reg;
 };
 
-#define NUM_REG_FRAME				2
+#define NUM_REG_FRAME				3
 #endif
 
 #define MAX_TCP_SESSION                25
@@ -375,6 +366,7 @@ struct wilc_vif {
 	u8 restart;
 	bool p2p_listen_state;
 	struct cfg80211_bss *bss;
+	struct cfg80211_external_auth_params auth;
 };
 
 struct wilc_power_gpios {
@@ -484,7 +476,7 @@ void wilc_frmw_to_host(struct wilc_vif *vif, u8 *buff, u32 size,
 		       u32 pkt_offset, u8 status);
 void wilc_mac_indicate(struct wilc *wilc);
 void wilc_netdev_cleanup(struct wilc *wilc);
-void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size, bool is_auth);
 void wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode);
 struct wilc_vif *wilc_netdev_ifc_init(struct wilc *wl, const char *name,
 				      int vif_type, enum nl80211_iftype type,

@@ -274,6 +274,14 @@ static const struct of_device_id wilc_of_match[] = {
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, wilc_of_match);
+
+static const struct spi_device_id wilc_spi_id[] = {
+	{ "wilc1000", 0 },
+	{ "wilc3000", 0 },
+	{ /* sentinel */ }
+};
+MODULE_DEVICE_TABLE(spi, wilc_spi_id);
+
 static const struct dev_pm_ops wilc_spi_pm_ops = {
 	.suspend = wilc_spi_suspend,
 	.resume = wilc_spi_resume,
@@ -285,12 +293,13 @@ static struct spi_driver wilc_spi_driver = {
 		.of_match_table = wilc_of_match,
 		.pm = &wilc_spi_pm_ops,
 	},
+	.id_table = wilc_spi_id,
 	.probe =  wilc_bus_probe,
 	.remove = wilc_bus_remove,
 };
 module_spi_driver(wilc_spi_driver);
 MODULE_LICENSE("GPL");
-MODULE_VERSION("15.5");
+MODULE_VERSION("15.6");
 
 static int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
 {
@@ -1200,21 +1209,6 @@ static int wilc_spi_init(struct wilc *wilc, bool resume)
 	/*
 	 * configure protocol
 	 */
-
-	/* XXX: Due to current design of the IMX SPI driver, a dummy transaction
-	 * is needed in order to change SPI modes (or other features of the CPU
-	 * SPI peripheral). The WILC module is a little too smart for its own
-	 * good. It is able to accommodate any of the 4 modes but seems to latch
-	 * in the mode on the first SPI transaction. This means that when we do
-	 * a dummy SPI transaction to change the mode, the module sets the first
-	 * mode as the expected mode.
-	 *
-	 * To combat this, we just issue a reset command to the module, then
-	 * do a power cycle of the module to reset the SPI mode it expects.
-	 */
-	wilc_spi_reset(wilc);
-	wilc_wlan_power(wilc, false);
-	wilc_wlan_power(wilc, true);
 
 	/*
 	 * Infer the CRC settings that are currently in effect.  This
