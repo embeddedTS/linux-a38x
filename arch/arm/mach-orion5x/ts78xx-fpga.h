@@ -32,6 +32,7 @@ struct fpga_devices {
 	struct fpga_device	ts_rtc;
 	struct fpga_device	ts_nand;
 	struct fpga_device	ts_rng;
+	struct fpga_device	ts_irqc;
 };
 
 struct ts78xx_fpga_data {
