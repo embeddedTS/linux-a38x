@@ -278,6 +278,14 @@ config TS4800_IRQ
 	help
 	  Support for the TS-4800 FPGA IRQ controller
 
+config TS7800_IRQ
+	tristate "TS-7800 IRQ controller"
+	select IRQ_DOMAIN
+	depends on HAS_IOMEM
+	depends on MACH_TS78XX
+	help
+	  Support for the TS-7800 FPGA IRQ controller
+
 config VERSATILE_FPGA_IRQ
 	bool
 	select IRQ_DOMAIN

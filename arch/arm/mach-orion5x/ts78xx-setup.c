@@ -326,6 +326,49 @@ static void ts78xx_ts_rng_unload(void)
 }
 
 /*****************************************************************************
+ * fpga irq controller
+ ****************************************************************************/
+#define TS_IRQC_CTRL (TS78XX_FPGA_REGS_PHYS_BASE + 0x200)
+#define TS_BRIDGE_CTRL (ORION5X_REGS_PHYS_BASE + 0x20400)
+#define TS_IRQC_PARENT 0x2
+static struct resource ts_irqc_resources[] = {
+	DEFINE_RES_MEM_NAMED(TS_IRQC_CTRL, 0x100, "ts_irqc"),
+	DEFINE_RES_MEM_NAMED(TS_BRIDGE_CTRL, 0x10, "ts_bridge"),
+	DEFINE_RES_IRQ_NAMED(TS_IRQC_PARENT, "ts_irqc_parent"),
+};
+
+static struct platform_device ts_irqc_device = {
+	.name = "ts7800-irqc",
+	.id = -1,
+	.resource = ts_irqc_resources,
+	.num_resources = ARRAY_SIZE(ts_irqc_resources),
+};
+
+static int ts_irqc_load(void)
+{
+	int rc;
+
+	if (ts78xx_fpga.supports.ts_irqc.init == 0) {
+		rc = platform_device_register(&ts_irqc_device);
+		if (!rc)
+			ts78xx_fpga.supports.ts_irqc.init = 1;
+	} else {
+		rc = platform_device_add(&ts_irqc_device);
+	}
+
+	if (rc)
+		pr_info("FPGA based IRQ controller could not be registered: %d\n",
+			rc);
+
+	return rc;
+}
+
+static void ts_irqc_unload(void)
+{
+	platform_device_del(&ts_irqc_device);
+}
+
+/*****************************************************************************
  * FPGA 'hotplug' support code
  ****************************************************************************/
 static void ts78xx_fpga_devices_zero_init(void)
@@ -333,6 +376,7 @@ static void ts78xx_fpga_devices_zero_init(void)
 	ts78xx_fpga.supports.ts_rtc.init = 0;
 	ts78xx_fpga.supports.ts_nand.init = 0;
 	ts78xx_fpga.supports.ts_rng.init = 0;
+	ts78xx_fpga.supports.ts_irqc.init = 0;
 }
 
 static void ts78xx_fpga_supports(void)
@@ -351,6 +395,7 @@ static void ts78xx_fpga_supports(void)
 		ts78xx_fpga.supports.ts_rtc.present = 1;
 		ts78xx_fpga.supports.ts_nand.present = 1;
 		ts78xx_fpga.supports.ts_rng.present = 1;
+		ts78xx_fpga.supports.ts_irqc.present = 1;
 		break;
 	default:
 		/* enable devices if magic matches */
@@ -361,11 +406,13 @@ static void ts78xx_fpga_supports(void)
 			ts78xx_fpga.supports.ts_rtc.present = 1;
 			ts78xx_fpga.supports.ts_nand.present = 1;
 			ts78xx_fpga.supports.ts_rng.present = 1;
+			ts78xx_fpga.supports.ts_irqc.present = 1;
 			break;
 		default:
 			ts78xx_fpga.supports.ts_rtc.present = 0;
 			ts78xx_fpga.supports.ts_nand.present = 0;
 			ts78xx_fpga.supports.ts_rng.present = 0;
+			ts78xx_fpga.supports.ts_irqc.present = 0;
 		}
 	}
 }
@@ -374,6 +421,12 @@ static int ts78xx_fpga_load_devices(void)
 {
 	int tmp, ret = 0;
 
+	if (ts78xx_fpga.supports.ts_irqc.present == 1) {
+		tmp = ts_irqc_load();
+		if (tmp)
+			ts78xx_fpga.supports.ts_irqc.present = 0;
+		ret |= tmp;
+	}
 	if (ts78xx_fpga.supports.ts_rtc.present == 1) {
 		tmp = ts78xx_ts_rtc_load();
 		if (tmp)
@@ -398,13 +451,14 @@ static int ts78xx_fpga_load_devices(void)
 
 static int ts78xx_fpga_unload_devices(void)
 {
-
 	if (ts78xx_fpga.supports.ts_rtc.present == 1)
 		ts78xx_ts_rtc_unload();
 	if (ts78xx_fpga.supports.ts_nand.present == 1)
 		ts78xx_ts_nand_unload();
 	if (ts78xx_fpga.supports.ts_rng.present == 1)
 		ts78xx_ts_rng_unload();
+	if (ts78xx_fpga.supports.ts_irqc.present == 1)
+		ts_irqc_unload();
 
 	return 0;
 }
