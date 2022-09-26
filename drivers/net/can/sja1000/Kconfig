@@ -102,6 +102,12 @@ config CAN_SJA1000_PLATFORM
 	  on embedded systems with OpenFirmware bindings, e.g. if you
 	  have a PowerPC based system you may want to enable this option.
 
+config CAN_TS7800V2
+	tristate "TS-7800-V2 FPGA CAN Controller"
+	help
+	  Say Y here if you have a Technologic Systems TS-7800-V2 board and want to
+	  use the CAN controller in the board's FPGA.
+
 config CAN_TSCAN1
 	tristate "TS-CAN1 PC104 boards"
 	depends on ISA
