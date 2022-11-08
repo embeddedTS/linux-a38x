@@ -189,8 +189,6 @@
 		vendor = <0x1e6d>;
 		device = <0x7840>;
 
-		status = "okay";
-
 		/* <ranges> is set in the driver at runtime */
 
 		fpga_pll0c1: fpga_pll0c1 {
@@ -202,15 +200,22 @@
 		fpgarng@a4 {
 			compatible = "technologic,ts7840-rng";
 			reg = <0 0xa4 4>;
-			status = "okay";
+		};
+
+		fpgairqc: irq-controller@b0 {
+			compatible = "technologic,ts7840-irqc";
+			reg = <0 0xb0 4>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			interrupt-parent = <&gpio1>;
+			interrupts = <3 IRQ_TYPE_LEVEL_HIGH>;
 		};
 
 		fpga_bank0: ts7820-gpio@24 {
 			compatible = "technologic,ts7820-gpio";
 
-			/* INT A IRQ */
-			interrupt-parent = <&gic>;
-			interrupts = <GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&fpgairqc>;
+			interrupts = <16 IRQ_TYPE_LEVEL_HIGH>;
 
 			interrupt-controller;
 			#interrupt-cells = <2>;
@@ -218,25 +223,24 @@
 			gpio-controller;
 			#gpio-cells = <2>;
 			reg = <0 0x24 0x1c>;
-			status = "okay";
 
 			gpio-line-names =
-				"uart0_irq",
-				"uart1_irq",
-				"uart2_irq",
-				"uart3_irq",
-				"uart4_irq",
-				"uart5_irq",
-				"uart6_irq",
-				"uart7_irq",
-				"uart8_irq",
-				"",
-				"can_irq",
-				"spi_irq",
 				"",
 				"",
-				"sdio_irq",
-				"sd_busy",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
 				"power_fail_3v_pad",
 				"detect_9478_pad",
 				"",
@@ -258,9 +262,8 @@
 		fpga_bank1: ts7820-gpio@40 {
 			compatible = "technologic,ts7820-gpio";
 
-			/* INT A IRQ */
-			interrupt-parent = <&gic>;
-			interrupts = <GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&fpgairqc>;
+			interrupts = <17 IRQ_TYPE_LEVEL_HIGH>;
 
 			interrupt-controller;
 			#interrupt-cells = <2>;
@@ -268,7 +271,6 @@
 			gpio-controller;
 			#gpio-cells = <2>;
 			reg = <0 0x40 0x1c>;
-			status = "okay";
 
 			gpio-line-names =
 				"DIG_IO_1",
@@ -308,9 +310,8 @@
 		fpga_bank2: ts7820-gpio@5c {
 			compatible = "technologic,ts7820-gpio";
 
-			/* INT A IRQ */
-			interrupt-parent = <&gic>;
-			interrupts = <GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&fpgairqc>;
+			interrupts = <18 IRQ_TYPE_LEVEL_HIGH>;
 
 			interrupt-controller;
 			#interrupt-cells = <2>;
@@ -359,10 +360,11 @@
 		fpga_uart0: fpga-uart0 {
 			compatible = "ns16550a";
 			reg = <0 0x100 8>;
-			interrupt-parent = <&fpga_bank0>;
+			interrupt-parent = <&fpgairqc>;
 			interrupts = <0 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
+			fifo-size = <64>;
 			status = "okay";
 		};
 
@@ -370,10 +372,11 @@
 		fpga_uart1: fpga-uart1 {
 			compatible = "ns16550a";
 			reg = <0 0x108 8>;
-			interrupt-parent = <&fpga_bank0>;
+			interrupt-parent = <&fpgairqc>;
 			interrupts = <1 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
+			fifo-size = <64>;
 			status = "okay";
 		};
 
@@ -381,10 +384,11 @@
 		fpga_uart2: fpga-uart2 {
 			compatible = "ns16550a";
 			reg = <0 0x110 8>;
-			interrupt-parent = <&fpga_bank0>;
+			interrupt-parent = <&fpgairqc>;
 			interrupts = <2 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
+			fifo-size = <64>;
 			status = "okay";
 		};
 
@@ -392,10 +396,11 @@
 		fpga_uart3: fpga-uart3 {
 			compatible = "ns16550a";
 			reg = <0 0x118 8>;
-			interrupt-parent = <&fpga_bank0>;
+			interrupt-parent = <&fpgairqc>;
 			interrupts = <3 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
+			fifo-size = <64>;
 			status = "okay";
 		};
 
@@ -403,10 +408,11 @@
 		fpga_uart4: fpga-uart4 {
 			compatible = "ns16550a";
 			reg = <0 0x120 8>;
-			interrupt-parent = <&fpga_bank0>;
+			interrupt-parent = <&fpgairqc>;
 			interrupts = <4 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
+			fifo-size = <64>;
 			status = "okay";
 		};
 
@@ -414,10 +420,11 @@
 		fpga_uart5: fpga-uart5 {
 			compatible = "ns16550a";
 			reg = <0 0x128 8>;
-			interrupt-parent = <&fpga_bank0>;
+			interrupt-parent = <&fpgairqc>;
 			interrupts = <5 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
+			fifo-size = <64>;
 			status = "okay";
 		};
 
@@ -425,10 +432,11 @@
 		fpga_uart6: fpga-uart6 {
 			compatible = "ns16550a";
 			reg = <0 0x130 8>;
-			interrupt-parent = <&fpga_bank0>;
+			interrupt-parent = <&fpgairqc>;
 			interrupts = <6 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
+			fifo-size = <64>;
 			status = "okay";
 		};
 
@@ -436,10 +444,11 @@
 		fpga_uart7: fpga-uart7 {
 			compatible = "ns16550a";
 			reg = <0 0x138 8>;
-			interrupt-parent = <&fpga_bank0>;
+			interrupt-parent = <&fpgairqc>;
 			interrupts = <7 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
+			fifo-size = <64>;
 			status = "okay";
 		};
 
@@ -447,17 +456,18 @@
 		fpga_uart8: fpga-uart8 {
 			compatible = "ns16550a";
 			reg = <0 0x140 8>;
-			interrupt-parent = <&fpga_bank0>;
+			interrupt-parent = <&fpgairqc>;
 			interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
 			clock-frequency = <1843200>;
 			reg-io-width = <1>;
+			fifo-size = <64>;
 			status = "okay";
 		};
 
 		can@200 {
 			compatible = "nxp,sja1000";
 			reg = <0 0x200 0x00000100>;
-			interrupt-parent = <&fpga_bank0>;
+			interrupt-parent = <&fpgairqc>;
 			interrupts = <10 IRQ_TYPE_LEVEL_HIGH>;
 			reg-io-width = <1>;
 			nxp,external-clock-frequency = <16000000>;
@@ -467,7 +477,7 @@
 		opencores_spi0: spi@400 {
 			compatible = "opencores,spi-oc";
 			reg = <0 0x400 32>;
-			interrupt-parent = <&fpga_bank0>;
+			interrupt-parent = <&fpgairqc>;
 			interrupts = <11 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&fpga_pll0c1>;
 			clock-names ="spi-oc-clk";
@@ -493,7 +503,7 @@
 		ts_mmc: ts_mmc@800 {
 			compatible = "ts,tssdcore2";
 			reg = <0 0x800 32>;
-			interrupt-parent = <&fpga_bank0>;
+			interrupt-parent = <&fpgairqc>;
 			interrupts = <14 IRQ_TYPE_LEVEL_HIGH>;
 			busy-gpios = <&fpga_bank0 15 0>;
 			debug-gpios = <&fpga_bank1 12 0>;
