@@ -468,6 +468,28 @@
 			fifo-size = <64>;
 		};
 
+		/* Spare */
+		fpga_uart9: fpga-uart9 {
+			compatible = "ns16550a";
+			reg = <0 0x148 8>;
+			interrupt-parent = <&fpgairqc>;
+			interrupts = <19 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+			fifo-size = <64>;
+		};
+
+		/* Spare */
+		fpga_uart10: fpga-uart10 {
+			compatible = "ns16550a";
+			reg = <0 0x150 8>;
+			interrupt-parent = <&fpgairqc>;
+			interrupts = <20 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <1843200>;
+			reg-io-width = <1>;
+			fifo-size = <64>;
+		};
+
 		can@200 {
 			compatible = "nxp,sja1000";
 			reg = <0 0x200 0x00000100>;
