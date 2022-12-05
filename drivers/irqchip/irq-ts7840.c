@@ -69,6 +69,9 @@ static void ts7840_ic_chained_handle_irq(struct irq_desc *desc)
 	struct irq_chip *chip = irq_desc_get_chip(desc);
 	u32 status = readl(data->base + IRQ_STATUS);
 
+	if (status == 0)
+		return;
+
 	chained_irq_enter(chip, desc);
 	
 	while(status) {
