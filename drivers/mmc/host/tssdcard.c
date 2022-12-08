@@ -202,7 +202,7 @@ static int tssdcard_transfer(struct tssdcard_dev *dev, unsigned long sector,
 		ret = sdwrite(&dev->tssdcore, sector, buffer, nsect);
 		if (ret && !dev->tssdcore.sd_wprot) {
 			if (sdreset(&dev->tssdcore) != 0) {
-				tssdcard_reset_timeout(dev);
+				tssdcard_reset_timeout(&dev->tssdcore);
 				ret = sdwrite(&dev->tssdcore, sector,
 					      buffer, nsect);
 			}
@@ -214,7 +214,7 @@ static int tssdcard_transfer(struct tssdcard_dev *dev, unsigned long sector,
 		ret = sdread(&dev->tssdcore, sector, buffer, nsect);
 		if (ret) {
 			if (sdreset(&dev->tssdcore) != 0) {
-				tssdcard_reset_timeout(dev);
+				tssdcard_reset_timeout(&dev->tssdcore);
 				ret = sdread(&dev->tssdcore, sector,
 					     buffer, nsect);
 			}
