@@ -60,6 +60,16 @@
 
 		spi0 = &spi0;
 		spi3 = &opencores_spi0;
+		spi4 = &opencores_spi1;
+
+		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+		i2c2 = &sfp0_i2c;
+		i2c3 = &sfp1_i2c;
+		i2c3 = &sfp1_i2c;
+		i2c4 = &poe_i2c;
+		i2c5 = &aux_i2c;
+		i2c6 = &mikro_i2c;
 	};
 
 	chosen {
@@ -69,14 +79,6 @@
 	memory {
 		device_type = "memory";
 		reg = <0x00000000 0x80000000>; /* 2GB */
-	};
-
-	i2c2: mikrobus-i2c {
-		compatible = "i2c-gpio";
-		gpios = <&fpga_bank2 14 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>, /* sda */
-			<&fpga_bank2 13 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>; /* scl */
-		#address-cells = <1>;
-		#size-cells = <0>;
 	};
 
 	sfp0_i2c: sfp0-i2c {
@@ -95,7 +97,7 @@
 		#size-cells = <0>;
 	};
 
-	i2c5: poe-i2c {
+	poe_i2c: poe-i2c {
 		compatible = "i2c-gpio";
 		gpios = <&fpga_bank1 8 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>, /* sda */
 			<&fpga_bank1 7 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>; /* scl */
@@ -103,7 +105,7 @@
 		#size-cells = <0>;
 	};
 
-	i2c6: aux-i2c {
+	aux_i2c: aux-i2c {
 		compatible = "i2c-gpio";
 		gpios = <&fpga_bank1 25 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>, /* sda */
 			<&fpga_bank1 26 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>; /* scl */
@@ -512,25 +514,67 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			spifram: fram@0 {
-				compatible = "atmel,at25", "cypress,fm25l16b";
+			spifram: spi@0 {
+				compatible = "cypress,fm25l16b", "atmel,at25";
 				reg = <0>;
-				spi-max-frequency = <20000>;
+				spi-max-frequency = <19800000>;
 				size = <0x800>;
 				address-width = <16>;
 				pagesize = <64>;
-				status = "okay";
 			};
+		};
+
+		opencores_spi1: spi@420 {
+			compatible = "opencores,spi-oc";
+			reg = <0 0x420 32>;
+			interrupt-parent = <&fpgairqc>;
+			interrupts = <12 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&fpga_pll0c1>;
+			clock-names ="spi-oc-clk";
+			opencores-spi,idx = <0>;
+			opencores-spi,num-chipselects = <1>;
+
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			spidev@0 {
+				compatible = "spidev";
+				reg = <0>;
+				spi-max-frequency = <1000000>;
+			};
+		};
+
+		mikro_i2c: i2c@500 {
+			compatible = "opencores,i2c-ocores";
+			reg = <0 0x500 4>;
+			interrupt-parent = <&fpgairqc>;
+			interrupts = <13 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&fpga_pll0c1>;
+			clock-names = "i2c-oc-clk";
+		};
+
+		mikro_pwm: pwm@600 {
+			compatible = "technologic,pwm";
+			reg = <0 0x600 8>;
+			clocks = <&fpga_pll0c1>;
+			clock-names = "pwm-input-clk";
 		};
 
 		ts_mmc: ts_mmc@800 {
 			compatible = "ts,tssdcore2";
 			reg = <0 0x800 32>;
-			interrupt-parent = <&fpgairqc>;
-			interrupts = <14 IRQ_TYPE_LEVEL_HIGH>;
+			//interrupt-parent = <&fpgairqc>;
+			//interrupts = <14 IRQ_TYPE_LEVEL_HIGH>;
 			busy-gpios = <&fpga_bank0 15 0>;
 			debug-gpios = <&fpga_bank1 12 0>;
 			status = "disabled";
+		};
+
+		mikro_adc0: adc@900 {
+			compatible = "technologic,ts-simple-adc";
+			reg = <0 0x900 4>;
+			interrupt-parent = <&fpgairqc>;
+			interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;
 		};
 	};
 
